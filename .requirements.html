@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SE基礎学習プロジェクト - 要件定義書</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --accent-color: #FF961C;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', 'Hiragino Kaku Gothic Pro', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #003d75);
+            color: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .portal-button {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .portal-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .portal-button::before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: var(--card-bg);
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .section h4 {
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: 600;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-left: 4px solid var(--accent-color);
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .requirement-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .requirement-table th,
+        .requirement-table td {
+            border: 1px solid var(--border-color);
+            padding: 0.8rem;
+            text-align: left;
+        }
+
+        .requirement-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .requirement-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .version-info {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .portal-button {
+                position: static;
+                transform: none;
+                display: inline-block;
+                margin-bottom: 1rem;
+            }
+
+            header {
+                padding: 1.5rem 1rem;
+                text-align: center;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="portal-button">ポータルへ戻る</a>
+        <h1>📋 要件定義書</h1>
+        <p class="subtitle">SE基礎学習プロジェクト - システム要件と仕様</p>
+    </header>
+
+    <div class="container">
+        <div class="version-info">
+            <h3>📄 文書情報</h3>
+            <p><strong>文書名:</strong> SE基礎学習プロジェクト 要件定義書</p>
+            <p><strong>バージョン:</strong> 1.0</p>
+            <p><strong>作成日:</strong> 2024年12月</p>
+            <p><strong>最終更新:</strong> 2024年12月</p>
+            <p><strong>対象システム:</strong> GitHub Pages ベースの学習プラットフォーム</p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 1. プロジェクト概要</h2>
+            
+            <h3>1.1 プロジェクト目的</h3>
+            <p>システムエンジニアリングの基礎知識を体系的に学習できるWebベースの教育プラットフォームを構築し、初学者から中級者まで幅広い学習者に対応した包括的な学習環境を提供する。</p>
+
+            <h3>1.2 プロジェクトの背景</h3>
+            <ul>
+                <li>SEスキルの体系的な学習リソースの不足</li>
+                <li>実践的なツールとシミュレーション環境の必要性</li>
+                <li>段階的な学習カリキュラムの要求</li>
+                <li>オンラインでアクセス可能な教育コンテンツの需要</li>
+            </ul>
+
+            <h3>1.3 対象ユーザー</h3>
+            <ul>
+                <li><strong>主要対象:</strong> SEを目指すプログラミング初学者〜中級者</li>
+                <li><strong>副次対象:</strong> 既存エンジニアのスキルアップ学習者</li>
+                <li><strong>想定レベル:</strong> 基礎プログラミング知識保有者</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔧 2. システム要件</h2>
+
+            <h3>2.1 機能要件</h3>
+            
+            <h4>2.1.1 必須機能</h4>
+            <table class="requirement-table">
+                <thead>
+                    <tr>
+                        <th>機能ID</th>
+                        <th>機能名</th>
+                        <th>説明</th>
+                        <th>優先度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>REQ-001</td>
+                        <td>ポータルサイト</td>
+                        <td>全学習コンテンツへの統一アクセスポイント</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td>REQ-002</td>
+                        <td>DBMS学習ツール</td>
+                        <td>データベース基礎概念の学習とシミュレーション</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td>REQ-003</td>
+                        <td>IDE解説ガイド</td>
+                        <td>統合開発環境の機能と使用方法の学習</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td>REQ-004</td>
+                        <td>VB/VBA学習ガイド</td>
+                        <td>Visual BasicとVBAの実践的な学習コンテンツ</td>
+                        <td>中</td>
+                    </tr>
+                    <tr>
+                        <td>REQ-005</td>
+                        <td>ナビゲーション機能</td>
+                        <td>全ページ間のスムーズな移動とポータル復帰</td>
+                        <td>高</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>2.1.2 オプション機能</h4>
+            <ul>
+                <li>学習進捗管理システム</li>
+                <li>習熟度テスト機能</li>
+                <li>学習履歴の保存・管理</li>
+                <li>ユーザーカスタマイズ機能</li>
+            </ul>
+
+            <h3>2.2 非機能要件</h3>
+
+            <h4>2.2.1 パフォーマンス要件</h4>
+            <ul>
+                <li>ページロード時間: 3秒以内</li>
+                <li>インタラクティブ要素の応答時間: 1秒以内</li>
+                <li>大容量コンテンツの段階的読み込み対応</li>
+            </ul>
+
+            <h4>2.2.2 ユーザビリティ要件</h4>
+            <ul>
+                <li>直感的なナビゲーション設計</li>
+                <li>レスポンシブデザイン対応（PC/タブレット/モバイル）</li>
+                <li>アクセシビリティ標準への準拠</li>
+                <li>多様なブラウザでの動作保証</li>
+            </ul>
+
+            <h4>2.2.3 互換性要件</h4>
+            <ul>
+                <li><strong>ブラウザ対応:</strong> Chrome, Firefox, Safari, Edge（最新2バージョン）</li>
+                <li><strong>デバイス対応:</strong> デスクトップ、タブレット、スマートフォン</li>
+                <li><strong>画面解像度:</strong> 1024×768以上推奨</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📚 3. 学習コンテンツ要件</h2>
+
+            <h3>3.1 コンテンツ構成</h3>
+            
+            <h4>3.1.1 DBMS基礎学習</h4>
+            <ul>
+                <li>データベース管理システムの基本概念</li>
+                <li>リレーショナルデータベースの理論</li>
+                <li>SQL文法とクエリ操作</li>
+                <li>トランザクション処理の理解</li>
+                <li>実践的なデータ操作シミュレーション</li>
+            </ul>
+
+            <h4>3.1.2 IDE機能解説</h4>
+            <ul>
+                <li>統合開発環境の基本機能</li>
+                <li>コードエディタとデバッガの使用方法</li>
+                <li>プロジェクト管理機能</li>
+                <li>ビルドとデプロイメントプロセス</li>
+                <li>インタラクティブな操作体験</li>
+            </ul>
+
+            <h4>3.1.3 Visual Basic/VBA実践</h4>
+            <ul>
+                <li>VB6.0でのコード追跡とデバッグ技術</li>
+                <li>VBAイミディエイトウィンドウの活用方法</li>
+                <li>実際の開発現場での実践的テクニック</li>
+                <li>効率的なコード検索と修正手法</li>
+            </ul>
+
+            <h3>3.2 学習支援機能</h3>
+            <ul>
+                <li>段階的な難易度設定（基礎・中級・上級）</li>
+                <li>視覚的な図解とアニメーション</li>
+                <li>実践的なシミュレーション環境</li>
+                <li>豊富なサンプルコードとその解説</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ 4. 技術要件</h2>
+
+            <h3>4.1 開発技術スタック</h3>
+            <ul>
+                <li><strong>フロントエンド:</strong> HTML5, CSS3, JavaScript (ES6+)</li>
+                <li><strong>スタイリング:</strong> カスタムCSS（フレームワーク不使用）</li>
+                <li><strong>ホスティング:</strong> GitHub Pages</li>
+                <li><strong>バージョン管理:</strong> Git/GitHub</li>
+            </ul>
+
+            <h3>4.2 アーキテクチャ要件</h3>
+            <ul>
+                <li>静的サイト生成アプローチ</li>
+                <li>モジュラー設計による再利用性確保</li>
+                <li>プログレッシブエンハンスメント</li>
+                <li>外部依存関係の最小化</li>
+            </ul>
+
+            <h3>4.3 セキュリティ要件</h3>
+            <ul>
+                <li>HTTPSによる通信暗号化</li>
+                <li>XSS攻撃対策の実装</li>
+                <li>適切なコンテンツセキュリティポリシー</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📋 5. 制約条件</h2>
+
+            <h3>5.1 技術的制約</h3>
+            <ul>
+                <li>GitHub Pagesの静的サイト制限</li>
+                <li>サーバーサイド処理の利用不可</li>
+                <li>データベースの直接利用不可</li>
+                <li>ファイルサイズとリポジトリ容量制限</li>
+            </ul>
+
+            <h3>5.2 運用制約</h3>
+            <ul>
+                <li>メンテナンス作業は手動での実施</li>
+                <li>ユーザーデータの永続化制限</li>
+                <li>リアルタイム機能の制限</li>
+            </ul>
+
+            <h3>5.3 コスト制約</h3>
+            <ul>
+                <li>無料サービス範囲内での運用</li>
+                <li>外部有料サービスの利用制限</li>
+                <li>CDNの無料枠内での利用</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🎯 6. 成功基準</h2>
+
+            <h3>6.1 定量的指標</h3>
+            <ul>
+                <li>全学習コンテンツの完成度100%</li>
+                <li>主要ブラウザでの動作確認100%</li>
+                <li>ページロード時間3秒以内の達成</li>
+                <li>モバイル対応の完全実装</li>
+            </ul>
+
+            <h3>6.2 定性的指標</h3>
+            <ul>
+                <li>直感的で使いやすいユーザーインターフェース</li>
+                <li>学習効果の高いコンテンツ構成</li>
+                <li>保守性と拡張性を考慮した設計</li>
+                <li>アクセシビリティ基準への適合</li>
+            </ul>
+        </div>
+
+        <div class="highlight">
+            <h3>⚠️ 重要な注意事項</h3>
+            <ul>
+                <li>本要件定義書は開発過程で必要に応じて更新される</li>
+                <li>技術的制約により一部機能の実装方法が変更される可能性がある</li>
+                <li>ユーザーフィードバックに基づく機能追加・修正を考慮する</li>
+                <li>将来的な機能拡張に対応できる柔軟な設計を心がける</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBAイミディエイトウィンドウ完全ガイド - 初心者向け図解解説</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --accent-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --neutral-grey: #F5F5F5;
+            --dark-grey: #616161;
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #F44336;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Meiryo, "Hiragino Kaku Gothic Pro", sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            background-color: #f8f9fa;
+            line-height: 1.8;
+        }
+        
+        /* ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--medium-blue) 100%);
+            color: var(--text-light);
+            padding: 3rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .portal-button {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-light);
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+        
+        .portal-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .portal-button::before {
+            content: '←';
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .portal-button {
+                position: static;
+                transform: none;
+                display: inline-block;
+                margin-bottom: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            header {
+                padding: 1.5rem 1rem;
+            }
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 60%;
+            height: 200%;
+            background: rgba(255,255,255,0.05);
+            transform: rotate(45deg);
+            animation: slideIn 1s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%) rotate(45deg);
+            }
+            to {
+                transform: translateX(0) rotate(45deg);
+            }
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .subtitle {
+            margin-top: 0.5rem;
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* トグルセクション */
+        .toggle-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-section:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .toggle-header {
+            background: var(--light-blue);
+            padding: 1.5rem 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .toggle-header:hover {
+            background: #d0e5f7;
+        }
+        
+        .toggle-header h2 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .toggle-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .toggle-arrow {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-section.active .toggle-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .toggle-content {
+            padding: 2rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .toggle-section.active .toggle-content {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            cursor: help;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        .tooltip:hover {
+            color: var(--accent-color);
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 320px;
+            background: linear-gradient(135deg, #333 0%, #555 100%);
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -160px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-weight: normal;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            position: relative;
+        }
+        
+        .code-block::before {
+            content: 'VBA';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        /* インラインコード */
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: var(--danger-color);
+            font-size: 0.9em;
+        }
+        
+        /* テーブル */
+        .command-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .command-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .command-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .command-table tr:hover td {
+            background: var(--light-blue);
+            transform: translateX(5px);
+        }
+        
+        .command-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* SVG図解 */
+        .diagram-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .svg-diagram {
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+        
+        /* シミュレーター */
+        .simulator {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        
+        .simulator h3 {
+            color: white;
+            margin-top: 0;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+        
+        .immediate-window {
+            background: white;
+            border: 2px solid #999;
+            min-height: 300px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .immediate-header {
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .immediate-content {
+            padding: 10px;
+            height: 250px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+        }
+        
+        .immediate-output {
+            color: #000;
+            margin: 2px 0;
+        }
+        
+        .immediate-input {
+            display: flex;
+            align-items: center;
+            margin: 2px 0;
+        }
+        
+        .immediate-input input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Consolas', monospace;
+            font-size: 0.95rem;
+            flex: 1;
+            padding: 2px;
+        }
+        
+        .immediate-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 16px;
+            background: black;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .sample-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .sample-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sample-button:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255,150,28,0.3);
+        }
+        
+        /* 注意ボックス */
+        .alert-box {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            position: relative;
+            padding-left: 3.5rem;
+        }
+        
+        .alert-box::before {
+            position: absolute;
+            left: 1rem;
+            top: 1.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .alert-info {
+            background: #E3F2FD;
+            border: 2px solid #2196F3;
+        }
+        
+        .alert-info::before {
+            content: 'ℹ️';
+        }
+        
+        .alert-warning {
+            background: #FFF3E0;
+            border: 2px solid var(--warning-color);
+        }
+        
+        .alert-warning::before {
+            content: '⚠️';
+        }
+        
+        .alert-success {
+            background: #E8F5E9;
+            border: 2px solid var(--success-color);
+        }
+        
+        .alert-success::before {
+            content: '✅';
+        }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .toggle-header h2 {
+                font-size: 1.3rem;
+            }
+            
+            .tooltip .tooltiptext {
+                width: 250px;
+                margin-left: -125px;
+            }
+            
+            .command-table {
+                font-size: 0.9rem;
+            }
+            
+            .command-table td, .command-table th {
+                padding: 0.5rem;
+            }
+        }
+        
+        /* キーボードショートカット表示 */
+        .kbd {
+            background: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            box-shadow: 0 2px 0 #bbb;
+            display: inline-block;
+            margin: 0 2px;
+        }
+        
+        /* ステップ表示 */
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2rem;
+            height: 2rem;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* アニメーション */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards;
+        }
+        
+        .slide-in {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInX 0.6s ease forwards;
+        }
+        
+        @keyframes slideInX {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="portal-button">ポータルへ戻る</a>
+        <h1>🔍 VBAイミディエイトウィンドウ完全ガイド</h1>
+        <p class="subtitle">初心者でもわかる！図解で学ぶデバッグの強力ツール</p>
+    </header>
+    
+    <div class="container">
+        <!-- 導入部 -->
+        <div class="toggle-section active">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">📚</span>イミディエイトウィンドウとは？</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <p>
+                    <span class="tooltip">イミディエイトウィンドウ<span class="tooltiptext">VBAの開発環境（VBE）に備わっている機能の一つ。コードを1行ずつ即座に実行して結果を確認できる便利なツール。「イミディエイト」は「即時の」という意味。</span></span>は、
+                    <span class="tooltip">VBA<span class="tooltiptext">Visual Basic for Applicationsの略。ExcelやWordなどのMicrosoft Office製品で使えるプログラミング言語。マクロを作成するために使用される。</span></span>の
+                    <span class="tooltip">デバッグ<span class="tooltiptext">プログラムの不具合（バグ）を見つけて修正する作業のこと。エラーの原因を調べたり、動作を確認したりする重要な開発工程。</span></span>作業に欠かせない強力なツールです。
+                </p>
+                
+                <div class="diagram-container">
+                    <svg class="svg-diagram" width="800" height="400" viewBox="0 0 800 400">
+                        <!-- VBE画面の全体図 -->
+                        <rect x="10" y="10" width="780" height="380" fill="#f0f0f0" stroke="#999" stroke-width="2" rx="5"/>
+                        
+                        <!-- タイトルバー -->
+                        <rect x="10" y="10" width="780" height="30" fill="#005BAB" rx="5"/>
+                        <text x="400" y="30" text-anchor="middle" fill="white" font-size="16" font-weight="bold">Microsoft Visual Basic for Applications</text>
+                        
+                        <!-- プロジェクトエクスプローラー -->
+                        <rect x="20" y="50" width="200" height="150" fill="white" stroke="#ccc" stroke-width="1"/>
+                        <rect x="20" y="50" width="200" height="25" fill="#E0EEF9"/>
+                        <text x="120" y="68" text-anchor="middle" font-size="12" fill="#005BAB">プロジェクト</text>
+                        
+                        <!-- コードウィンドウ -->
+                        <rect x="230" y="50" width="550" height="200" fill="white" stroke="#ccc" stroke-width="1"/>
+                        <rect x="230" y="50" width="550" height="25" fill="#E0EEF9"/>
+                        <text x="505" y="68" text-anchor="middle" font-size="12" fill="#005BAB">コードウィンドウ</text>
+                        <text x="240" y="95" font-family="Consolas" font-size="12" fill="#333">Sub Test()</text>
+                        <text x="240" y="115" font-family="Consolas" font-size="12" fill="#333">    Dim x As Integer</text>
+                        <text x="240" y="135" font-family="Consolas" font-size="12" fill="#333">    x = 10</text>
+                        <text x="240" y="155" font-family="Consolas" font-size="12" fill="#333">    Debug.Print x</text>
+                        <text x="240" y="175" font-family="Consolas" font-size="12" fill="#333">End Sub</text>
+                        
+                        <!-- イミディエイトウィンドウ（ハイライト） -->
+                        <rect x="230" y="260" width="550" height="120" fill="#FFE0B2" stroke="#FF961C" stroke-width="3" rx="5"/>
+                        <rect x="230" y="260" width="550" height="25" fill="#FF961C"/>
+                        <text x="505" y="278" text-anchor="middle" font-size="12" fill="white" font-weight="bold">イミディエイトウィンドウ</text>
+                        <text x="240" y="305" font-family="Consolas" font-size="12" fill="#333">? x</text>
+                        <text x="240" y="325" font-family="Consolas" font-size="12" fill="#333"> 10</text>
+                        <text x="240" y="345" font-family="Consolas" font-size="12" fill="#333">? x + 5</text>
+                        <text x="240" y="365" font-family="Consolas" font-size="12" fill="#333"> 15</text>
+                        
+                        <!-- 矢印と説明 -->
+                        <path d="M 650 220 Q 680 240 650 260" fill="none" stroke="#FF961C" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <text x="655" y="240" font-size="12" fill="#FF961C">ここで即座に実行！</text>
+                        
+                        <!-- マーカー定義 -->
+                        <defs>
+                            <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF961C"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <div class="alert-box alert-info">
+                    <strong>なぜイミディエイトウィンドウが必要？</strong>
+                    <ul>
+                        <li>プログラムを実行せずに、部分的にコードをテストできる</li>
+                        <li><span class="tooltip">変数<span class="tooltiptext">プログラムでデータを一時的に保存しておく入れ物。名前を付けて値を格納し、後で参照したり変更したりできる。</span></span>の値を即座に確認できる</li>
+                        <li>複雑な計算式の結果をすぐに検証できる</li>
+                        <li>エラーの原因を効率的に特定できる</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 基本編 -->
+        <div class="toggle-section">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">🚀</span>基本編：イミディエイトウィンドウの開き方と基本操作</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <h3>イミディエイトウィンドウを開く方法</h3>
+                
+                <div class="alert-box alert-success">
+                    <strong>最速の開き方：</strong><kbd>Ctrl</kbd> + <kbd>G</kbd> を押すだけ！
+                </div>
+                
+                <h4>方法1：ショートカットキー（推奨）</h4>
+                <ol class="step-list">
+                    <li>Excelで <kbd>Alt</kbd> + <kbd>F11</kbd> を押して<span class="tooltip">VBE<span class="tooltiptext">Visual Basic Editorの略。VBAのコードを書いたり編集したりするための統合開発環境。</span></span>を開く</li>
+                    <li><kbd>Ctrl</kbd> + <kbd>G</kbd> を押す</li>
+                    <li>画面下部にイミディエイトウィンドウが表示される</li>
+                </ol>
+                
+                <h4>方法2：メニューから開く</h4>
+                <ol class="step-list">
+                    <li>VBEのメニューバーから「表示」をクリック</li>
+                    <li>「イミディエイトウィンドウ」を選択</li>
+                </ol>
+                
+                <h3>基本的なコマンド一覧</h3>
+                
+                <table class="command-table">
+                    <tr>
+                        <th>コマンド</th>
+                        <th>説明</th>
+                        <th>使用例</th>
+                        <th>結果</th>
+                    </tr>
+                    <tr>
+                        <td><code>? 式</code></td>
+                        <td>式を評価して結果を表示</td>
+                        <td><code>? 10 + 20</code></td>
+                        <td>30</td>
+                    </tr>
+                    <tr>
+                        <td><code>? 変数名</code></td>
+                        <td>変数の値を表示</td>
+                        <td><code>? myVariable</code></td>
+                        <td>（変数の値）</td>
+                    </tr>
+                    <tr>
+                        <td><code>Debug.Print</code></td>
+                        <td>値を出力（<code>?</code>と同じ）</td>
+                        <td><code>Debug.Print "Hello"</code></td>
+                        <td>Hello</td>
+                    </tr>
+                    <tr>
+                        <td><code>プロシージャ名</code></td>
+                        <td>Subプロシージャを実行</td>
+                        <td><code>TestSub</code></td>
+                        <td>（実行される）</td>
+                    </tr>
+                    <tr>
+                        <td><code>変数 = 値</code></td>
+                        <td>変数に値を代入</td>
+                        <td><code>x = 100</code></td>
+                        <td>（代入される）</td>
+                    </tr>
+                </table>
+                
+                <div class="diagram-container">
+                    <svg class="svg-diagram" width="600" height="300" viewBox="0 0 600 300">
+                        <!-- イミディエイトウィンドウの使い方フロー -->
+                        <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">イミディエイトウィンドウの使い方フロー</text>
+                        
+                        <!-- ステップ1 -->
+                        <rect x="20" y="60" width="150" height="60" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="10"/>
+                        <text x="95" y="85" text-anchor="middle" font-size="14" font-weight="bold" fill="#005BAB">1. コマンド入力</text>
+                        <text x="95" y="105" text-anchor="middle" font-size="12" fill="#333">? 1 + 1</text>
+                        
+                        <!-- 矢印1 -->
+                        <path d="M 170 90 L 210 90" fill="none" stroke="#FF961C" stroke-width="3" marker-end="url(#arrow1)"/>
+                        
+                        <!-- ステップ2 -->
+                        <rect x="210" y="60" width="150" height="60" fill="#FFE0B2" stroke="#FF961C" stroke-width="2" rx="10"/>
+                        <text x="285" y="85" text-anchor="middle" font-size="14" font-weight="bold" fill="#FF961C">2. Enter押下</text>
+                        <text x="285" y="105" text-anchor="middle" font-size="20" fill="#333">⏎</text>
+                        
+                        <!-- 矢印2 -->
+                        <path d="M 360 90 L 400 90" fill="none" stroke="#4CAF50" stroke-width="3" marker-end="url(#arrow2)"/>
+                        
+                        <!-- ステップ3 -->
+                        <rect x="400" y="60" width="150" height="60" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2" rx="10"/>
+                        <text x="475" y="85" text-anchor="middle" font-size="14" font-weight="bold" fill="#4CAF50">3. 結果表示</text>
+                        <text x="475" y="105" text-anchor="middle" font-size="12" fill="#333"> 2</text>
+                        
+                        <!-- 実例 -->
+                        <rect x="50" y="150" width="500" height="120" fill="white" stroke="#999" stroke-width="1" rx="5"/>
+                        <rect x="50" y="150" width="500" height="25" fill="#f0f0f0"/>
+                        <text x="300" y="168" text-anchor="middle" font-size="12" fill="#666">イミディエイト</text>
+                        
+                        <text x="60" y="195" font-family="Consolas" font-size="12" fill="#333">? "Hello" &amp; " World"</text>
+                        <text x="60" y="215" font-family="Consolas" font-size="12" fill="#666">Hello World</text>
+                        <text x="60" y="235" font-family="Consolas" font-size="12" fill="#333">? Date()</text>
+                        <text x="60" y="255" font-family="Consolas" font-size="12" fill="#666">2025/06/09</text>
+                        
+                        <!-- マーカー定義 -->
+                        <defs>
+                            <marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF961C"/>
+                            </marker>
+                            <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#4CAF50"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 実践編 -->
+        <div class="toggle-section">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">💡</span>実践編：変数の確認とDebug.Print</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <h3>変数の値を確認する</h3>
+                
+                <p>プログラムの実行中に<span class="tooltip">変数<span class="tooltiptext">プログラムでデータを一時的に保存しておく入れ物。名前を付けて値を格納し、後で参照したり変更したりできる。</span></span>の値を確認することは、デバッグの基本です。</p>
+                
+                <div class="code-block">
+Sub TestVariable()
+    Dim myName As String
+    Dim myAge As Integer
+    
+    myName = "田中太郎"
+    myAge = 25
+    
+    ' ここでブレークポイントを設定（F9キー）
+    Stop
+End Sub</div>
+                
+                <p><span class="tooltip">ブレークポイント<span class="tooltiptext">プログラムの実行を一時停止させる場所。F9キーで設定/解除できる。デバッグ時に変数の値を確認したい場所に設定する。</span></span>で停止したら、イミディエイトウィンドウで以下を実行：</p>
+                
+                <div class="code-block">
+? myName
+田中太郎
+? myAge
+ 25
+? myName & "さんは" & myAge & "歳です"
+田中太郎さんは25歳です</div>
+                
+                <h3>Debug.Printの使い方</h3>
+                
+                <p><code>Debug.Print</code>は、プログラム実行中に自動的に値をイミディエイトウィンドウに出力します。</p>
+                
+                <div class="diagram-container">
+                    <svg class="svg-diagram" width="700" height="350" viewBox="0 0 700 350">
+                        <!-- Debug.Printの流れ図 -->
+                        <text x="350" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">Debug.Printの動作フロー</text>
+                        
+                        <!-- コード実行 -->
+                        <rect x="50" y="60" width="200" height="100" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="10"/>
+                        <text x="150" y="85" text-anchor="middle" font-size="14" font-weight="bold" fill="#005BAB">VBAコード</text>
+                        <text x="60" y="110" font-family="Consolas" font-size="11" fill="#333">For i = 1 To 3</text>
+                        <text x="60" y="130" font-family="Consolas" font-size="11" fill="#333">  Debug.Print "回数: " &amp; i</text>
+                        <text x="60" y="150" font-family="Consolas" font-size="11" fill="#333">Next i</text>
+                        
+                        <!-- 矢印 -->
+                        <path d="M 250 110 L 320 110" fill="none" stroke="#FF961C" stroke-width="3" marker-end="url(#debugArrow)"/>
+                        <text x="285" y="100" text-anchor="middle" font-size="12" fill="#FF961C">自動出力</text>
+                        
+                        <!-- イミディエイトウィンドウ -->
+                        <rect x="320" y="60" width="300" height="100" fill="white" stroke="#FF961C" stroke-width="2" rx="10"/>
+                        <rect x="320" y="60" width="300" height="25" fill="#FF961C"/>
+                        <text x="470" y="78" text-anchor="middle" font-size="12" fill="white" font-weight="bold">イミディエイトウィンドウ</text>
+                        <text x="330" y="105" font-family="Consolas" font-size="12" fill="#333">回数: 1</text>
+                        <text x="330" y="125" font-family="Consolas" font-size="12" fill="#333">回数: 2</text>
+                        <text x="330" y="145" font-family="Consolas" font-size="12" fill="#333">回数: 3</text>
+                        
+                        <!-- 利点 -->
+                        <rect x="150" y="200" width="400" height="120" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2" rx="10"/>
+                        <text x="350" y="225" text-anchor="middle" font-size="14" font-weight="bold" fill="#4CAF50">Debug.Printの利点</text>
+                        <text x="170" y="250" font-size="12" fill="#333">✓ MsgBoxと違い、処理を中断しない</text>
+                        <text x="170" y="270" font-size="12" fill="#333">✓ 複数の値を連続して確認できる</text>
+                        <text x="170" y="290" font-size="12" fill="#333">✓ ループ処理のデバッグに最適</text>
+                        <text x="170" y="310" font-size="12" fill="#333">✓ 実行後も履歴が残る</text>
+                        
+                        <!-- マーカー定義 -->
+                        <defs>
+                            <marker id="debugArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF961C"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <h3>実践的な使用例</h3>
+                
+                <div class="code-block">
+Sub DebugExample()
+    Dim arr() As Variant
+    Dim i As Integer
+    
+    arr = Array("りんご", "みかん", "ぶどう")
+    
+    Debug.Print "=== 配列の内容 ==="
+    For i = 0 To UBound(arr)
+        Debug.Print "arr(" & i & ") = " & arr(i)
+    Next i
+    
+    Debug.Print "=== 処理完了 ==="
+    Debug.Print "配列の要素数: " & UBound(arr) + 1
+    Debug.Print "実行時刻: " & Now()
+End Sub</div>
+                
+                <div class="alert-box alert-warning">
+                    <strong>注意点：</strong>
+                    <ul>
+                        <li><code>Debug.Print</code>の出力は、本番環境でも実行されます（ユーザーには見えません）</li>
+                        <li>大量のデータを出力すると処理速度が低下する可能性があります</li>
+                        <li>イミディエイトウィンドウは200行程度で古い内容が消えます</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 応用編 -->
+        <div class="toggle-section">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">🎯</span>応用編：デバッグテクニックとワンライナー</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <h3>デバッグ時の活用テクニック</h3>
+                
+                <h4>1. 変数の値を動的に変更</h4>
+                <p>デバッグ中に変数の値を変更して、異なる条件での動作を確認できます。</p>
+                
+                <div class="code-block">
+' デバッグ中にイミディエイトウィンドウで実行
+i = i - 1    ' ループカウンタを1つ戻す
+myValue = 100    ' 変数の値を変更
+Application.ScreenUpdating = True    ' 画面更新を有効化</div>
+                
+                <h4>2. プロパティの確認</h4>
+                <p><span class="tooltip">オブジェクト<span class="tooltiptext">Excelで操作対象となる要素の総称。ワークブック、ワークシート、セル、グラフなど、すべてがオブジェクト。それぞれプロパティ（属性）とメソッド（動作）を持つ。</span></span>の<span class="tooltip">プロパティ<span class="tooltiptext">オブジェクトが持つ属性や設定値。例：セルのValueプロパティ（値）、Fontプロパティ（フォント）など。読み取りや設定が可能。</span></span>を即座に確認できます。</p>
+                
+                <div class="code-block">
+? ActiveSheet.Name    ' アクティブシートの名前
+? Selection.Address    ' 選択範囲のアドレス
+? ThisWorkbook.Path    ' ブックの保存パス
+? Range("A1").Value    ' A1セルの値
+? ActiveCell.Row    ' アクティブセルの行番号</div>
+                
+                <h3>便利なワンライナー集</h3>
+                
+                <p>イミディエイトウィンドウで1行で実行できる便利なコマンド集です。</p>
+                
+                <table class="command-table">
+                    <tr>
+                        <th>目的</th>
+                        <th>コマンド</th>
+                        <th>説明</th>
+                    </tr>
+                    <tr>
+                        <td>全シート名を表示</td>
+                        <td><code>For Each ws In Worksheets: Debug.Print ws.Name: Next</code></td>
+                        <td>ブック内の全シート名を一覧表示</td>
+                    </tr>
+                    <tr>
+                        <td>セルに値を入力</td>
+                        <td><code>Range("A1:A10").Value = "テスト"</code></td>
+                        <td>範囲内のセルに一括入力</td>
+                    </tr>
+                    <tr>
+                        <td>現在時刻を確認</td>
+                        <td><code>? Now()</code></td>
+                        <td>現在の日時を表示</td>
+                    </tr>
+                    <tr>
+                        <td>配列の内容を表示</td>
+                        <td><code>? Join(arr, ", ")</code></td>
+                        <td>1次元配列をカンマ区切りで表示</td>
+                    </tr>
+                    <tr>
+                        <td>使用範囲を選択</td>
+                        <td><code>ActiveSheet.UsedRange.Select</code></td>
+                        <td>データが入力されている範囲を選択</td>
+                    </tr>
+                </table>
+                
+                <div class="diagram-container">
+                    <svg class="svg-diagram" width="650" height="300" viewBox="0 0 650 300">
+                        <!-- デバッグ活用図 -->
+                        <text x="325" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">デバッグ時の活用フロー</text>
+                        
+                        <!-- ステップ1 -->
+                        <circle cx="100" cy="100" r="40" fill="#E0EEF9" stroke="#005BAB" stroke-width="2"/>
+                        <text x="100" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#005BAB">開始</text>
+                        
+                        <!-- 矢印1 -->
+                        <path d="M 140 100 L 180 100" fill="none" stroke="#333" stroke-width="2" marker-end="url(#flowArrow)"/>
+                        
+                        <!-- ステップ2 -->
+                        <rect x="180" y="70" width="120" height="60" fill="#FFE0B2" stroke="#FF961C" stroke-width="2" rx="5"/>
+                        <text x="240" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">ブレークポイント</text>
+                        <text x="240" y="115" text-anchor="middle" font-size="11" fill="#666">設定（F9）</text>
+                        
+                        <!-- 矢印2 -->
+                        <path d="M 300 100 L 340 100" fill="none" stroke="#333" stroke-width="2" marker-end="url(#flowArrow)"/>
+                        
+                        <!-- ステップ3 -->
+                        <rect x="340" y="70" width="120" height="60" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2" rx="5"/>
+                        <text x="400" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">実行停止</text>
+                        <text x="400" y="115" text-anchor="middle" font-size="11" fill="#666">変数確認</text>
+                        
+                        <!-- 矢印3 -->
+                        <path d="M 460 100 L 500 100" fill="none" stroke="#333" stroke-width="2" marker-end="url(#flowArrow)"/>
+                        
+                        <!-- ステップ4 -->
+                        <circle cx="540" cy="100" r="40" fill="#E3F2FD" stroke="#2196F3" stroke-width="2"/>
+                        <text x="540" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#2196F3">値変更</text>
+                        <text x="540" y="110" text-anchor="middle" font-size="11" font-weight="bold" fill="#2196F3">継続実行</text>
+                        
+                        <!-- イミディエイトの役割 -->
+                        <rect x="150" y="180" width="350" height="80" fill="#F5F5F5" stroke="#999" stroke-width="1" rx="5"/>
+                        <text x="325" y="205" text-anchor="middle" font-size="14" font-weight="bold" fill="#666">イミディエイトウィンドウで実行</text>
+                        <text x="170" y="230" font-size="12" fill="#333">• ? 変数名 → 値を確認</text>
+                        <text x="170" y="250" font-size="12" fill="#333">• 変数 = 新しい値 → 値を変更</text>
+                        
+                        <!-- マーカー定義 -->
+                        <defs>
+                            <marker id="flowArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- トラブルシューティング -->
+        <div class="toggle-section">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">🔧</span>トラブルシューティング</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <h3>よくある問題と解決方法</h3>
+                
+                <h4>1. イミディエイトウィンドウが表示されない</h4>
+                <div class="alert-box alert-info">
+                    <strong>解決方法：</strong>
+                    <ul>
+                        <li><kbd>Ctrl</kbd> + <kbd>G</kbd> を押す</li>
+                        <li>それでも表示されない場合は、VBEの「表示」メニューから選択</li>
+                        <li>画面外に移動している可能性があるため、ウィンドウをリセット</li>
+                    </ul>
+                </div>
+                
+                <h4>2. 変数の値が表示されない</h4>
+                <div class="alert-box alert-warning">
+                    <strong>原因と対策：</strong>
+                    <ul>
+                        <li><strong>原因1：</strong>変数が<span class="tooltip">スコープ<span class="tooltiptext">変数や関数が有効な範囲。プロシージャ内で宣言した変数は、そのプロシージャ内でのみ有効。</span></span>外
+                            <br>→ ブレークポイントを変数が有効な範囲内に設定</li>
+                        <li><strong>原因2：</strong>変数がまだ初期化されていない
+                            <br>→ 変数に値が代入された後の行で確認</li>
+                        <li><strong>原因3：</strong>Option Explicitが設定されていない
+                            <br>→ モジュールの先頭に<code>Option Explicit</code>を追加</li>
+                    </ul>
+                </div>
+                
+                <h4>3. Debug.Printの出力が表示されない</h4>
+                <div class="code-block">
+' 確認事項
+' 1. イミディエイトウィンドウが開いているか確認
+' 2. 以下のコードで動作確認
+Debug.Print "テスト出力"
+
+' 3. それでも表示されない場合
+Application.VBE.Windows("イミディエイト").Visible = True</div>
+                
+                <h4>4. エラーメッセージが表示される</h4>
+                <table class="command-table">
+                    <tr>
+                        <th>エラー</th>
+                        <th>原因</th>
+                        <th>対処法</th>
+                    </tr>
+                    <tr>
+                        <td>変数が定義されていません</td>
+                        <td>変数名のタイプミス、または未宣言</td>
+                        <td>変数名を確認、必要に応じて宣言を追加</td>
+                    </tr>
+                    <tr>
+                        <td>型が一致しません</td>
+                        <td>データ型の不一致</td>
+                        <td>変数の型を確認、適切な型変換を行う</td>
+                    </tr>
+                    <tr>
+                        <td>オブジェクトが必要です</td>
+                        <td>オブジェクト変数が未設定</td>
+                        <td><code>Set</code>キーワードでオブジェクトを設定</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- インタラクティブシミュレーター -->
+        <div class="simulator">
+            <h3>🎮 イミディエイトウィンドウ シミュレーター</h3>
+            <p style="color: white; text-align: center; margin-bottom: 1rem;">実際のイミディエイトウィンドウを体験してみましょう！</p>
+            
+            <div class="immediate-window">
+                <div class="immediate-header">イミディエイト</div>
+                <div class="immediate-content" id="immediateContent">
+                    <div class="immediate-output">VBAイミディエイトウィンドウ シミュレーター</div>
+                    <div class="immediate-output">コマンドを入力してEnterキーを押してください。</div>
+                    <div class="immediate-output">例: ? 1 + 1</div>
+                    <div class="immediate-input">
+                        <span id="inputPrompt"></span>
+                        <input type="text" id="immediateInput" placeholder="ここにコマンドを入力...">
+                        <span class="immediate-cursor"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sample-buttons">
+                <button class="sample-button" onclick="executeCommand('? 1 + 1')">? 1 + 1</button>
+                <button class="sample-button" onclick="executeCommand('? Date()')">? Date()</button>
+                <button class="sample-button" onclick="executeCommand('? \"Hello\" & \" World\"')">? "Hello" & " World"</button>
+                <button class="sample-button" onclick="executeCommand('? 10 * 5')">? 10 * 5</button>
+                <button class="sample-button" onclick="executeCommand('myVar = 100')">myVar = 100</button>
+                <button class="sample-button" onclick="executeCommand('? myVar')">? myVar</button>
+                <button class="sample-button" onclick="clearSimulator()">クリア</button>
+            </div>
+        </div>
+        
+        <!-- ショートカットキー一覧 -->
+        <div class="toggle-section">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">⌨️</span>便利なショートカットキー一覧</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <h3>イミディエイトウィンドウ関連</h3>
+                <table class="command-table">
+                    <tr>
+                        <th>操作</th>
+                        <th>ショートカット</th>
+                        <th>説明</th>
+                    </tr>
+                    <tr>
+                        <td>イミディエイトウィンドウを開く</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>G</kbd></td>
+                        <td>VBE内でイミディエイトウィンドウを表示</td>
+                    </tr>
+                    <tr>
+                        <td>コード補完</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>Space</kbd></td>
+                        <td>入力中のコードを自動補完</td>
+                    </tr>
+                    <tr>
+                        <td>改行（実行なし）</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
+                        <td>コマンドを実行せずに改行</td>
+                    </tr>
+                    <tr>
+                        <td>イミディエイトの先頭へ</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>Home</kbd></td>
+                        <td>イミディエイトウィンドウの最初へ移動</td>
+                    </tr>
+                    <tr>
+                        <td>イミディエイトの末尾へ</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>End</kbd></td>
+                        <td>イミディエイトウィンドウの最後へ移動</td>
+                    </tr>
+                </table>
+                
+                <h3>デバッグ関連</h3>
+                <table class="command-table">
+                    <tr>
+                        <th>操作</th>
+                        <th>ショートカット</th>
+                        <th>説明</th>
+                    </tr>
+                    <tr>
+                        <td>ブレークポイント設定/解除</td>
+                        <td><kbd>F9</kbd></td>
+                        <td>現在の行にブレークポイントを設定または解除</td>
+                    </tr>
+                    <tr>
+                        <td>ステップ実行</td>
+                        <td><kbd>F8</kbd></td>
+                        <td>1行ずつコードを実行</td>
+                    </tr>
+                    <tr>
+                        <td>実行</td>
+                        <td><kbd>F5</kbd></td>
+                        <td>マクロを実行またはブレークポイントまで実行</td>
+                    </tr>
+                    <tr>
+                        <td>実行停止</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>Break</kbd></td>
+                        <td>実行中のマクロを強制停止</td>
+                    </tr>
+                    <tr>
+                        <td>呼び出し履歴</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>L</kbd></td>
+                        <td>現在の実行スタックを表示</td>
+                    </tr>
+                </table>
+                
+                <h3>VBE全般</h3>
+                <table class="command-table">
+                    <tr>
+                        <th>操作</th>
+                        <th>ショートカット</th>
+                        <th>説明</th>
+                    </tr>
+                    <tr>
+                        <td>VBEを開く</td>
+                        <td><kbd>Alt</kbd> + <kbd>F11</kbd></td>
+                        <td>ExcelからVBEを起動</td>
+                    </tr>
+                    <tr>
+                        <td>コードウィンドウへ</td>
+                        <td><kbd>F7</kbd></td>
+                        <td>選択したオブジェクトのコードを表示</td>
+                    </tr>
+                    <tr>
+                        <td>オブジェクトブラウザ</td>
+                        <td><kbd>F2</kbd></td>
+                        <td>使用可能なオブジェクトを一覧表示</td>
+                    </tr>
+                    <tr>
+                        <td>定義へ移動</td>
+                        <td><kbd>Shift</kbd> + <kbd>F2</kbd></td>
+                        <td>選択した変数や関数の定義へジャンプ</td>
+                    </tr>
+                    <tr>
+                        <td>検索</td>
+                        <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
+                        <td>コード内を検索</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- まとめ -->
+        <div class="toggle-section">
+            <div class="toggle-header">
+                <h2><span class="toggle-icon">📝</span>まとめ：イミディエイトウィンドウをマスターしよう</h2>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="toggle-content">
+                <h3>覚えておきたい重要ポイント</h3>
+                
+                <div class="alert-box alert-success">
+                    <strong>イミディエイトウィンドウの3つの主要機能：</strong>
+                    <ol>
+                        <li><strong>即座に実行</strong>：1行のコードをその場で実行</li>
+                        <li><strong>値の確認</strong>：変数やプロパティの値を表示</li>
+                        <li><strong>デバッグ支援</strong>：プログラムの動作を詳細に追跡</li>
+                    </ol>
+                </div>
+                
+                <h3>効率的な使い方のコツ</h3>
+                <ul>
+                    <li>💡 <kbd>Ctrl</kbd> + <kbd>G</kbd> ショートカットを覚える</li>
+                    <li>💡 <code>?</code>（はてなマーク）は<code>Debug.Print</code>の省略形</li>
+                    <li>💡 ブレークポイント（<kbd>F9</kbd>）と組み合わせて使う</li>
+                    <li>💡 よく使うコマンドはメモしておく</li>
+                    <li>💡 複雑な処理は<code>Debug.Print</code>で経過を出力</li>
+                </ul>
+                
+                <h3>次のステップ</h3>
+                <p>イミディエイトウィンドウの基本をマスターしたら、以下にも挑戦してみましょう：</p>
+                <ul>
+                    <li>ウォッチウィンドウの活用</li>
+                    <li>ローカルウィンドウでの変数管理</li>
+                    <li>ステップ実行（<kbd>F8</kbd>）との組み合わせ</li>
+                    <li>条件付きブレークポイントの設定</li>
+                </ul>
+                
+                <div class="alert-box alert-info">
+                    <strong>練習のヒント：</strong>
+                    日常的なVBA開発で積極的にイミディエイトウィンドウを使いましょう。
+                    最初は簡単な計算や変数確認から始めて、徐々に複雑な使い方に挑戦していくことで、
+                    自然とデバッグスキルが向上します。
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // トグル機能
+        document.querySelectorAll('.toggle-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const section = this.parentElement;
+                section.classList.toggle('active');
+            });
+        });
+        
+        // シミュレーター機能
+        const immediateContent = document.getElementById('immediateContent');
+        const immediateInput = document.getElementById('immediateInput');
+        let simulatorVariables = {};
+        
+        // Enterキーでコマンド実行
+        immediateInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value.trim();
+                if (command) {
+                    executeCommand(command);
+                    this.value = '';
+                }
+            }
+        });
+        
+        function executeCommand(command) {
+            // コマンドを表示
+            addOutput(command, false);
+            
+            // コマンドを解析して実行
+            try {
+                let result = '';
+                
+                // ? で始まる場合（値の表示）
+                if (command.startsWith('?')) {
+                    const expression = command.substring(1).trim();
+                    result = evaluateExpression(expression);
+                }
+                // = を含む場合（変数への代入）
+                else if (command.includes('=') && !command.includes('==')) {
+                    const parts = command.split('=');
+                    const varName = parts[0].trim();
+                    const value = evaluateExpression(parts[1].trim());
+                    simulatorVariables[varName] = value;
+                    // 代入の場合は結果を表示しない（実際のVBAと同じ）
+                    return;
+                }
+                // Debug.Print
+                else if (command.startsWith('Debug.Print')) {
+                    const expression = command.substring(11).trim();
+                    result = evaluateExpression(expression);
+                }
+                else {
+                    result = 'エラー: 認識できないコマンドです';
+                }
+                
+                // 結果を表示
+                if (result !== undefined && result !== '') {
+                    addOutput(' ' + result, true);
+                }
+            } catch (error) {
+                addOutput('エラー: ' + error.message, true);
+            }
+            
+            // 入力フィールドをクリア
+            immediateInput.value = '';
+            immediateInput.focus();
+        }
+        
+        function evaluateExpression(expr) {
+            // 文字列リテラル
+            if (expr.startsWith('"') && expr.endsWith('"')) {
+                return expr.slice(1, -1);
+            }
+            
+            // 変数参照
+            if (simulatorVariables.hasOwnProperty(expr)) {
+                return simulatorVariables[expr];
+            }
+            
+            // Date()関数
+            if (expr === 'Date()') {
+                const now = new Date();
+                return now.toLocaleDateString('ja-JP');
+            }
+            
+            // Now()関数
+            if (expr === 'Now()') {
+                const now = new Date();
+                return now.toLocaleString('ja-JP');
+            }
+            
+            // 文字列連結（&）
+            if (expr.includes(' & ')) {
+                const parts = expr.split(' & ');
+                return parts.map(part => evaluateExpression(part.trim())).join('');
+            }
+            
+            // 基本的な計算
+            try {
+                // 安全な評価のため、数式のみを評価
+                if (/^[\d\s\+\-\*\/\(\)\.]+$/.test(expr)) {
+                    return eval(expr);
+                }
+            } catch (e) {
+                // エラーは無視
+            }
+            
+            // 変数が見つからない場合
+            if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(expr)) {
+                throw new Error('変数が定義されていません: ' + expr);
+            }
+            
+            return expr;
+        }
+        
+        function addOutput(text, isResult) {
+            const outputDiv = document.createElement('div');
+            outputDiv.className = 'immediate-output';
+            if (isResult) {
+                outputDiv.style.color = '#666';
+            }
+            outputDiv.textContent = text;
+            
+            // 入力エリアの前に挿入
+            const inputArea = immediateContent.querySelector('.immediate-input');
+            immediateContent.insertBefore(outputDiv, inputArea);
+            
+            // スクロールを最下部に
+            immediateContent.scrollTop = immediateContent.scrollHeight;
+        }
+        
+        function clearSimulator() {
+            // 入力エリア以外をクリア
+            const outputs = immediateContent.querySelectorAll('.immediate-output');
+            outputs.forEach(output => output.remove());
+            
+            // 初期メッセージを追加
+            addOutput('画面がクリアされました', true);
+            
+            // 変数もクリア
+            simulatorVariables = {};
+            
+            immediateInput.focus();
+        }
+        
+        // 初期フォーカス
+        immediateInput.focus();
+        
+        // アニメーション
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        });
+        
+        document.querySelectorAll('.toggle-section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

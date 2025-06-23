@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SE基礎学習プロジェクト - 設計仕様書</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --accent-color: #FF961C;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --code-bg: #f8f9fa;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', 'Hiragino Kaku Gothic Pro', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #003d75);
+            color: white;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .portal-button {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .portal-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .portal-button::before {
+            content: '←';
+            margin-right: 0.5rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: var(--card-bg);
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .section h4 {
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+            font-weight: 600;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-left: 4px solid var(--accent-color);
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .component-box {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            margin: 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin: 0 1rem;
+        }
+
+        .design-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .design-table th,
+        .design-table td {
+            border: 1px solid var(--border-color);
+            padding: 0.8rem;
+            text-align: left;
+        }
+
+        .design-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .design-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .version-info {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .status-completed {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-in-progress {
+            background: var(--warning-color);
+            color: #333;
+        }
+
+        .file-structure {
+            background: var(--code-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .portal-button {
+                position: static;
+                transform: none;
+                display: inline-block;
+                margin-bottom: 1rem;
+            }
+
+            header {
+                padding: 1.5rem 1rem;
+                text-align: center;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .component-box {
+                display: block;
+                margin: 0.5rem 0;
+            }
+
+            .flow-arrow {
+                display: block;
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="portal-button">ポータルへ戻る</a>
+        <h1>⚙️ 設計仕様書</h1>
+        <p class="subtitle">SE基礎学習プロジェクト - システム設計とアーキテクチャ</p>
+    </header>
+
+    <div class="container">
+        <div class="version-info">
+            <h3>📄 文書情報</h3>
+            <p><strong>文書名:</strong> SE基礎学習プロジェクト 設計仕様書</p>
+            <p><strong>バージョン:</strong> 1.0</p>
+            <p><strong>作成日:</strong> 2024年12月</p>
+            <p><strong>最終更新:</strong> 2024年12月</p>
+            <p><strong>設計者:</strong> Claude Code AI システム</p>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ 1. システムアーキテクチャ</h2>
+            
+            <h3>1.1 全体構成</h3>
+            <p>本システムは静的サイト生成アプローチを採用し、GitHub Pagesでホスティングされるクライアントサイドアプリケーションとして設計されています。</p>
+
+            <div class="architecture-diagram">
+                <h4>システム構成図</h4>
+                <div style="margin: 2rem 0;">
+                    <div class="component-box">ユーザー</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="component-box">GitHub Pages</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="component-box">静的HTMLファイル</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="component-box">ブラウザレンダリング</div>
+                </div>
+            </div>
+
+            <h3>1.2 技術スタック</h3>
+            <table class="design-table">
+                <thead>
+                    <tr>
+                        <th>レイヤー</th>
+                        <th>技術</th>
+                        <th>用途</th>
+                        <th>バージョン</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>プレゼンテーション</td>
+                        <td>HTML5</td>
+                        <td>マークアップ・構造定義</td>
+                        <td>5.0</td>
+                    </tr>
+                    <tr>
+                        <td>スタイル</td>
+                        <td>CSS3</td>
+                        <td>デザイン・レイアウト</td>
+                        <td>3.0</td>
+                    </tr>
+                    <tr>
+                        <td>ビヘイビア</td>
+                        <td>JavaScript</td>
+                        <td>インタラクション・動的処理</td>
+                        <td>ES6+</td>
+                    </tr>
+                    <tr>
+                        <td>ホスティング</td>
+                        <td>GitHub Pages</td>
+                        <td>静的サイトホスティング</td>
+                        <td>最新</td>
+                    </tr>
+                    <tr>
+                        <td>バージョン管理</td>
+                        <td>Git/GitHub</td>
+                        <td>ソースコード管理</td>
+                        <td>最新</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📁 2. ファイル構成設計</h2>
+
+            <h3>2.1 ディレクトリ構造</h3>
+            <div class="file-structure">
+SE/
+├── index.html                     # メインポータルページ
+├── requirements.html              # 要件定義書（隠しファイル化予定）
+├── design.html                    # 設計仕様書（隠しファイル化予定）
+├── dbms-tabbed-interface.html     # DBMS学習ツール（タブ版）
+├── dbms-learning-tool.html        # DBMS学習ツール（単体版）
+├── ide-simulator.html             # IDE解説ガイド
+├── ide-simulator2.html            # IDE統合開発環境シミュレーター
+├── vb6-code-navigation-guide.html # VB6.0コード追跡ガイド
+├── vba-immediate-window-guide.html# VBAイミディエイトウィンドウガイド
+├── CLAUDE.md                      # Claude Code設定ファイル
+└── assets/                        # 将来的なアセット格納用
+    ├── css/                       # 共通CSSファイル（必要に応じて）
+    ├── js/                        # 共通JavaScriptファイル（必要に応じて）
+    └── images/                    # 画像ファイル（必要に応じて）
+            </div>
+
+            <h3>2.2 ファイル命名規則</h3>
+            <ul>
+                <li><strong>HTMLファイル:</strong> kebab-case形式（例: dbms-learning-tool.html）</li>
+                <li><strong>設定ファイル:</strong> 大文字形式（例: CLAUDE.md, README.md）</li>
+                <li><strong>隠しファイル:</strong> ドット始まり（例: .requirements.html, .design.html）</li>
+                <li><strong>アセットファイル:</strong> 小文字＋ハイフン形式</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🎨 3. UI/UX設計</h2>
+
+            <h3>3.1 デザインシステム</h3>
+            
+            <h4>3.1.1 カラーパレット</h4>
+            <table class="design-table">
+                <thead>
+                    <tr>
+                        <th>色名</th>
+                        <th>HEX値</th>
+                        <th>用途</th>
+                        <th>使用例</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>プライマリーカラー</td>
+                        <td>#005BAB</td>
+                        <td>メインブランドカラー</td>
+                        <td>ヘッダー、ボタン、見出し</td>
+                    </tr>
+                    <tr>
+                        <td>アクセントカラー</td>
+                        <td>#FF961C</td>
+                        <td>強調・アクション</td>
+                        <td>CTA、リンク、ハイライト</td>
+                    </tr>
+                    <tr>
+                        <td>テキストカラー</td>
+                        <td>#333333</td>
+                        <td>本文テキスト</td>
+                        <td>段落、リスト、説明文</td>
+                    </tr>
+                    <tr>
+                        <td>背景カラー</td>
+                        <td>#F5F5F5</td>
+                        <td>ページ背景</td>
+                        <td>body背景、セクション間</td>
+                    </tr>
+                    <tr>
+                        <td>カード背景</td>
+                        <td>#FFFFFF</td>
+                        <td>コンテンツカード</td>
+                        <td>学習カード、モーダル</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>3.1.2 タイポグラフィ</h4>
+            <ul>
+                <li><strong>メインフォント:</strong> Meiryo, "Hiragino Kaku Gothic Pro", system-ui, sans-serif</li>
+                <li><strong>コードフォント:</strong> 'Consolas', 'Monaco', 'Courier New', monospace</li>
+                <li><strong>見出しサイズ:</strong> H1(2.5rem) → H2(1.8rem) → H3(1.3rem) → H4(1.1rem)</li>
+                <li><strong>行間:</strong> 1.6〜1.8（読みやすさ重視）</li>
+            </ul>
+
+            <h3>3.2 レスポンシブデザイン</h3>
+            
+            <h4>3.2.1 ブレイクポイント</h4>
+            <table class="design-table">
+                <thead>
+                    <tr>
+                        <th>デバイス</th>
+                        <th>画面幅</th>
+                        <th>主な調整内容</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>モバイル</td>
+                        <td>〜767px</td>
+                        <td>1カラム、タッチ最適化、文字サイズ調整</td>
+                    </tr>
+                    <tr>
+                        <td>タブレット</td>
+                        <td>768px〜1023px</td>
+                        <td>2カラム、中間サイズ調整</td>
+                    </tr>
+                    <tr>
+                        <td>デスクトップ</td>
+                        <td>1024px〜</td>
+                        <td>マルチカラム、ホバーエフェクト</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>3.2.2 アクセシビリティ対応</h4>
+            <ul>
+                <li>カラーコントラスト比 4.5:1以上の確保</li>
+                <li>キーボード操作対応</li>
+                <li>スクリーンリーダー対応（ARIA属性）</li>
+                <li>フォントサイズの可変対応</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>⚡ 4. 機能設計</h2>
+
+            <h3>4.1 ナビゲーション設計</h3>
+            
+            <h4>4.1.1 ポータル機能</h4>
+            <ul>
+                <li><strong>目的:</strong> 全学習コンテンツへの統一アクセスポイント</li>
+                <li><strong>実装:</strong> index.htmlによるカード型レイアウト</li>
+                <li><strong>特徴:</strong> 難易度別色分け、プログレス表示、検索機能（将来実装）</li>
+            </ul>
+
+            <h4>4.1.2 戻りナビゲーション</h4>
+            <div class="code-block">
+&lt;!-- 全ページ共通のポータルボタン --&gt;
+&lt;a href="index.html" class="portal-button"&gt;
+    ← ポータルへ戻る
+&lt;/a&gt;
+            </div>
+
+            <h3>4.2 学習コンテンツ設計</h3>
+
+            <h4>4.2.1 DBMS学習ツール</h4>
+            <table class="design-table">
+                <thead>
+                    <tr>
+                        <th>機能</th>
+                        <th>実装方法</th>
+                        <th>ステータス</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>タブ式インターフェース</td>
+                        <td>JavaScript + CSS</td>
+                        <td><span class="status-badge status-completed">完了</span></td>
+                    </tr>
+                    <tr>
+                        <td>SQLシミュレーター</td>
+                        <td>クライアントサイドJS</td>
+                        <td><span class="status-badge status-completed">完了</span></td>
+                    </tr>
+                    <tr>
+                        <td>インタラクティブ図解</td>
+                        <td>SVG + アニメーション</td>
+                        <td><span class="status-badge status-completed">完了</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>4.2.2 IDE学習ツール</h4>
+            <table class="design-table">
+                <thead>
+                    <tr>
+                        <th>機能</th>
+                        <th>実装方法</th>
+                        <th>ステータス</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>IDE風インターフェース</td>
+                        <td>CSS Grid + Flexbox</td>
+                        <td><span class="status-badge status-completed">完了</span></td>
+                    </tr>
+                    <tr>
+                        <td>コードエディタシミュレーション</td>
+                        <td>textarea + syntax highlighting</td>
+                        <td><span class="status-badge status-completed">完了</span></td>
+                    </tr>
+                    <tr>
+                        <td>デバッガシミュレーション</td>
+                        <td>ステップ実行JavaScript</td>
+                        <td><span class="status-badge status-completed">完了</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🔒 5. セキュリティ設計</h2>
+
+            <h3>5.1 クライアントサイドセキュリティ</h3>
+            <ul>
+                <li><strong>XSS対策:</strong> ユーザー入力のサニタイゼーション</li>
+                <li><strong>CSP実装:</strong> Content Security Policy の適用</li>
+                <li><strong>HTTPS強制:</strong> GitHub Pages標準対応</li>
+                <li><strong>外部リソース制限:</strong> 信頼できるCDNのみ使用</li>
+            </ul>
+
+            <h3>5.2 プライバシー配慮</h3>
+            <ul>
+                <li>ユーザーデータの最小化</li>
+                <li>ローカルストレージの適切な使用</li>
+                <li>第三者トラッキングの排除</li>
+                <li>Cookie使用の最小化</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📈 6. パフォーマンス設計</h2>
+
+            <h3>6.1 読み込み最適化</h3>
+            <ul>
+                <li><strong>画像最適化:</strong> WebP形式、適切なサイズ</li>
+                <li><strong>CSS最適化:</strong> クリティカルCSSのインライン化</li>
+                <li><strong>JavaScript最適化:</strong> 遅延読み込み、非同期処理</li>
+                <li><strong>キャッシュ活用:</strong> ブラウザキャッシュの適切な設定</li>
+            </ul>
+
+            <h3>6.2 実行時最適化</h3>
+            <ul>
+                <li><strong>DOM操作最小化:</strong> 効率的なセレクタ使用</li>
+                <li><strong>イベント処理最適化:</strong> デバウンス、スロットリング</li>
+                <li><strong>メモリ管理:</strong> 適切なクリーンアップ処理</li>
+                <li><strong>レンダリング最適化:</strong> CSS transform使用</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🧪 7. テスト設計</h2>
+
+            <h3>7.1 テスト種別</h3>
+            <table class="design-table">
+                <thead>
+                    <tr>
+                        <th>テスト種別</th>
+                        <th>対象</th>
+                        <th>実施方法</th>
+                        <th>合格基準</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>機能テスト</td>
+                        <td>全学習機能</td>
+                        <td>手動テスト</td>
+                        <td>仕様通りの動作</td>
+                    </tr>
+                    <tr>
+                        <td>ブラウザ互換性</td>
+                        <td>主要ブラウザ</td>
+                        <td>クロスブラウザテスト</td>
+                        <td>4大ブラウザ対応</td>
+                    </tr>
+                    <tr>
+                        <td>レスポンシブ</td>
+                        <td>各デバイス</td>
+                        <td>実機・エミュレータ</td>
+                        <td>全画面サイズ対応</td>
+                    </tr>
+                    <tr>
+                        <td>パフォーマンス</td>
+                        <td>読み込み速度</td>
+                        <td>ツール測定</td>
+                        <td>3秒以内の読み込み</td>
+                    </tr>
+                    <tr>
+                        <td>アクセシビリティ</td>
+                        <td>WCAG準拠</td>
+                        <td>自動・手動テスト</td>
+                        <td>AA レベル準拠</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>7.2 品質保証プロセス</h3>
+            <ul>
+                <li>コード品質チェック（Linting）</li>
+                <li>マークアップ妥当性検証</li>
+                <li>リンク切れチェック</li>
+                <li>ユーザビリティテスト</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🚀 8. デプロイメント設計</h2>
+
+            <h3>8.1 GitHub Pages設定</h3>
+            <div class="code-block">
+# GitHub Pages設定
+- ソースブランチ: main
+- ルートディレクトリ: /SE
+- カスタムドメイン: 未設定（github.io使用）
+- HTTPS強制: 有効
+            </div>
+
+            <h3>8.2 リリースプロセス</h3>
+            <ol>
+                <li>ローカル環境でのテスト完了確認</li>
+                <li>Gitコミット・プッシュ</li>
+                <li>GitHub Actions（将来的に自動テスト）</li>
+                <li>GitHub Pages自動デプロイ</li>
+                <li>本番環境での動作確認</li>
+            </ol>
+
+            <h3>8.3 バックアップ・復旧</h3>
+            <ul>
+                <li><strong>ソースコード:</strong> GitHubリポジトリ（分散バックアップ）</li>
+                <li><strong>デプロイ履歴:</strong> Git履歴による版管理</li>
+                <li><strong>復旧手順:</strong> 過去のコミットへのロールバック</li>
+            </ul>
+        </div>
+
+        <div class="highlight">
+            <h3>🔄 継続的改善事項</h3>
+            <ul>
+                <li><strong>モニタリング:</strong> GitHub Analytics、ユーザーフィードバック</li>
+                <li><strong>最適化:</strong> パフォーマンス測定とボトルネック解消</li>
+                <li><strong>機能拡張:</strong> 新しい学習コンテンツの追加</li>
+                <li><strong>技術更新:</strong> ブラウザ標準の変化への対応</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

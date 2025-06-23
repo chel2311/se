@@ -1,0 +1,2911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE完全解説ガイド - インタラクティブ学習版</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --secondary-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --dark-grey: #2C3E50;
+            --light-grey: #F5F5F5;
+            --success-green: #27AE60;
+            --error-red: #E74C3C;
+            --warning-yellow: #F39C12;
+            --text-dark: #333333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Meiryo', 'Hiragino Kaku Gothic Pro', sans-serif;
+            background: #f8f9fa;
+            color: var(--text-dark);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        
+        /* ヘッダー */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--medium-blue));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        /* ポータルボタン */
+        .portal-button {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+        
+        .portal-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .portal-button::before {
+            content: '←';
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+        
+        /* ポータルボタンのモバイル対応 */
+        @media (max-width: 768px) {
+            .portal-button {
+                position: static;
+                transform: none;
+                display: inline-block;
+                margin-bottom: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .header {
+                padding: 1.5rem 1rem;
+            }
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        /* メインコンテナ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* タブナビゲーション */
+        .tab-navigation {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .tab-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        .tab-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .tab-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .tab-wrapper::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        .tab-button {
+            padding: 0.8rem 1.5rem;
+            background: var(--light-grey);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: fit-content;
+        }
+        
+        .tab-button:hover {
+            background: var(--light-blue);
+            transform: translateY(-2px);
+        }
+        
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,91,171,0.3);
+        }
+        
+        .tab-icon {
+            font-size: 1.2rem;
+        }
+        
+        /* タブコンテンツ */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 用語セクション（タブ内） */
+        .term-section {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .term-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .term-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .term-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--light-blue), white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 4px 12px rgba(0,91,171,0.2);
+        }
+        
+        .term-title-group h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .term-english {
+            color: #666;
+            font-size: 1.1rem;
+            font-style: italic;
+        }
+        
+        .term-summary {
+            font-size: 1.2rem;
+            color: #555;
+            background: var(--light-grey);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            border-bottom: 2px dotted var(--primary-color);
+            cursor: help;
+            font-weight: 600;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 320px;
+            max-width: calc(100vw - 40px);
+            min-width: 200px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            text-align: left;
+            border-radius: 8px;
+            padding: 1rem;
+            position: fixed;
+            z-index: 999999;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            font-weight: normal;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            transform: translateY(10px);
+            white-space: normal;
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #34495e transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* ミニツールチップ */
+        .mini-tooltip {
+            position: relative;
+            display: inline-block;
+            color: #666;
+            font-style: italic;
+            cursor: help;
+        }
+        
+        .mini-tooltip::after {
+            content: attr(data-tip);
+            position: fixed;
+            left: var(--tooltip-left, 50%);
+            top: var(--tooltip-top, -40px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 999999;
+            max-width: calc(100vw - 40px);
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        
+        .mini-tooltip:hover::after {
+            opacity: 1;
+        }
+        
+        /* コンテンツスタイル */
+        .content-section {
+            margin-bottom: 2.5rem;
+        }
+        
+        .content-section h3 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .content-section p {
+            margin-bottom: 1rem;
+        }
+        
+        .content-section ul {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .content-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* 例示ボックス */
+        .example-box {
+            background: #f8f9fa;
+            border: 2px solid var(--light-blue);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .example-box::before {
+            content: '💡 例';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: white;
+            padding: 0 10px;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        /* コードブロック */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .code-comment {
+            color: #608b4e;
+        }
+        
+        .code-keyword {
+            color: #569cd6;
+        }
+        
+        .code-string {
+            color: #ce9178;
+        }
+        
+        .code-number {
+            color: #b5cea8;
+        }
+        
+        /* インタラクティブデモ */
+        .interactive-demo {
+            background: linear-gradient(135deg, var(--light-blue), #fff);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .interactive-demo::before {
+            content: '🎮 体験コーナー';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0 10px 0 20px;
+            font-weight: bold;
+        }
+        
+        .demo-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .demo-content {
+            margin-top: 1.5rem;
+        }
+        
+        .demo-btn {
+            padding: 0.8rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+        
+        .demo-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,150,28,0.3);
+        }
+        
+        /* 重要ポイント */
+        .important-point {
+            background: #FFF3E0;
+            border-left: 5px solid var(--secondary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .important-point strong {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+        
+        /* ヒントボックス */
+        .hint-box {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+        
+        .hint-icon {
+            font-size: 1.5rem;
+            color: #4CAF50;
+        }
+        
+        /* 警告ボックス */
+        .warning-box {
+            background: #FFEBEE;
+            border: 1px solid var(--error-red);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+        
+        .warning-icon {
+            font-size: 1.5rem;
+            color: var(--error-red);
+        }
+        
+        /* ミニ実行環境 */
+        .mini-ide {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .mini-ide-header {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .mini-ide-btn {
+            padding: 0.3rem 0.8rem;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .mini-ide-btn:hover {
+            background: var(--light-blue);
+            border-color: var(--primary-color);
+        }
+        
+        .mini-ide-content {
+            padding: 1rem;
+            min-height: 200px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+        }
+        
+        .mini-ide-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-top: 2px solid var(--primary-color);
+            min-height: 100px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        
+        /* プログレス表示 */
+        .progress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        
+        /* テーブルスタイル */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .info-table th {
+            background: var(--light-blue);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .info-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .info-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* サブタブ */
+        .sub-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--light-blue);
+            padding-bottom: 0;
+        }
+        
+        .sub-tab {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .sub-tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .sub-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--secondary-color);
+        }
+        
+        .sub-content {
+            display: none;
+        }
+        
+        .sub-content.active {
+            display: block;
+        }
+        
+        /* アニメーション */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        /* 実行中のラインハイライト */
+        .line-highlight {
+            background: rgba(255, 150, 28, 0.3);
+            border-left: 3px solid var(--secondary-color);
+            margin: 0 -1rem;
+            padding: 0 1rem;
+        }
+        
+        /* ステップカウンター */
+        .step-counter {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-left: 1rem;
+        }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .term-section {
+                padding: 2rem 1.5rem;
+            }
+            
+            .term-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .tab-wrapper {
+                justify-content: flex-start;
+            }
+            
+            .tooltip .tooltiptext {
+                width: 250px;
+                margin-left: -125px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <a href="index.html" class="portal-button">ポータルへ戻る</a>
+        <h1>
+            <span>💻</span>
+            IDE完全解説ガイド
+        </h1>
+        <p>統合開発環境の機能と用語を、実例と体験を通じて完全理解</p>
+    </header>
+    
+    <!-- メインコンテナ -->
+    <div class="container">
+        <!-- タブナビゲーション -->
+        <nav class="tab-navigation">
+            <div class="tab-wrapper">
+                <button class="tab-button active" onclick="showTab('overview')">
+                    <span class="tab-icon">🏢</span>
+                    IDEとは
+                </button>
+                <button class="tab-button" onclick="showTab('debug')">
+                    <span class="tab-icon">🐛</span>
+                    デバッグ
+                </button>
+                <button class="tab-button" onclick="showTab('breakpoint')">
+                    <span class="tab-icon">🔴</span>
+                    ブレークポイント
+                </button>
+                <button class="tab-button" onclick="showTab('step')">
+                    <span class="tab-icon">👣</span>
+                    ステップ実行
+                </button>
+                <button class="tab-button" onclick="showTab('immediate')">
+                    <span class="tab-icon">💬</span>
+                    イミディエイト
+                </button>
+                <button class="tab-button" onclick="showTab('project')">
+                    <span class="tab-icon">📁</span>
+                    プロジェクト
+                </button>
+                <button class="tab-button" onclick="showTab('build')">
+                    <span class="tab-icon">🔨</span>
+                    ビルド・コンパイル
+                </button>
+                <button class="tab-button" onclick="showTab('oop')">
+                    <span class="tab-icon">🎯</span>
+                    オブジェクト指向
+                </button>
+                <button class="tab-button" onclick="showTab('refactoring')">
+                    <span class="tab-icon">♻️</span>
+                    リファクタリング
+                </button>
+                <button class="tab-button" onclick="showTab('deploy')">
+                    <span class="tab-icon">🚀</span>
+                    デプロイ
+                </button>
+                <button class="tab-button" onclick="showTab('others')">
+                    <span class="tab-icon">🔧</span>
+                    その他の用語
+                </button>
+            </div>
+        </nav>
+        
+        <!-- タブコンテンツ -->
+        <!-- IDEとは -->
+        <div id="overview-tab" class="tab-content active">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🏢</div>
+                    <div class="term-title-group">
+                        <h2>IDEとは</h2>
+                        <div class="term-english">Integrated Development Environment</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    プログラム開発に必要なツールを1つにまとめた統合開発環境。
+                    <span class="tooltip">コード編集
+                        <span class="tooltiptext">プログラムのソースコードを書くためのエディタ機能。シンタックスハイライト（色分け）、自動インデント、コード補完などの機能により、効率的にコードを書けます。</span>
+                    </span>、
+                    <span class="tooltip">デバッグ
+                        <span class="tooltiptext">プログラムの不具合（バグ）を見つけて修正する作業。IDEのデバッガを使うと、プログラムを一時停止させて変数の値を確認したり、1行ずつ実行したりできます。</span>
+                    </span>、
+                    <span class="tooltip">ビルド
+                        <span class="tooltiptext">ソースコードから実行可能なプログラムを作成する処理。コンパイル、リンク、リソースの結合などが含まれます。</span>
+                    </span>、テストなど、開発に必要なすべての機能を提供します。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 IDEの基本概念</h3>
+                    <p>
+                        IDE（統合開発環境）は、プログラマーが効率的にソフトウェアを開発できるように設計された強力なツールです。
+                        単なるテキストエディタとは異なり、プログラム開発の
+                        <span class="tooltip">ライフサイクル
+                            <span class="tooltiptext">ソフトウェア開発の全工程。要件定義→設計→実装→テスト→デプロイ→保守という一連の流れを指します。IDEはこれらすべての工程をサポートします。</span>
+                        </span>全体をサポートする機能を備えています。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>代表的なIDE：</strong></p>
+                        <ul>
+                            <li><strong>Visual Studio</strong> - Microsoft製、<span class="mini-tooltip" data-tip=".NET: Microsoftの開発プラットフォーム">.NET開発</span>の定番</li>
+                            <li><strong>Eclipse</strong> - <span class="mini-tooltip" data-tip="オープンソース: 誰でも無料で使える">オープンソース</span>のJava IDE</li>
+                            <li><strong>Visual Studio Code</strong> - 軽量で<span class="mini-tooltip" data-tip="多言語対応: 様々なプログラミング言語に対応">多言語対応</span></li>
+                            <li><strong>IntelliJ IDEA</strong> - 高機能なJava IDE</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 IDEの主要機能</h3>
+                    
+                    <div class="sub-tabs">
+                        <button class="sub-tab active" onclick="showSubTab('overview', 'editor')">エディタ機能</button>
+                        <button class="sub-tab" onclick="showSubTab('overview', 'debugger')">デバッガ機能</button>
+                        <button class="sub-tab" onclick="showSubTab('overview', 'tools')">開発ツール</button>
+                    </div>
+                    
+                    <div id="overview-editor" class="sub-content active">
+                        <h4>コードエディタの機能</h4>
+                        <ul>
+                            <li><strong>シンタックスハイライト</strong> - キーワードや変数を色分け表示</li>
+                            <li><strong>自動補完（IntelliSense）</strong> - コードを予測して候補を表示</li>
+                            <li><strong>リアルタイムエラー検出</strong> - 入力中にエラーを即座に指摘</li>
+                            <li><strong>コードフォーマット</strong> - コードを読みやすく自動整形</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="overview-debugger" class="sub-content">
+                        <h4>デバッガの機能</h4>
+                        <ul>
+                            <li><strong>ブレークポイント</strong> - 任意の行で実行を一時停止</li>
+                            <li><strong>変数ウォッチ</strong> - 変数の値をリアルタイムで監視</li>
+                            <li><strong>ステップ実行</strong> - 1行ずつプログラムを実行</li>
+                            <li><strong>コールスタック</strong> - 関数の呼び出し履歴を表示</li>
+                        </ul>
+                    </div>
+                    
+                    <div id="overview-tools" class="sub-content">
+                        <h4>開発支援ツール</h4>
+                        <ul>
+                            <li><strong>プロジェクト管理</strong> - ファイルやリソースの整理</li>
+                            <li><strong>バージョン管理統合</strong> - Git等との連携</li>
+                            <li><strong>ビルドシステム</strong> - 自動ビルド・デプロイ</li>
+                            <li><strong>テストランナー</strong> - 単体テストの実行と結果表示</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="hint-box">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>初心者へのアドバイス：</strong>
+                        最初は機能の多さに圧倒されるかもしれませんが、基本的な機能（コード編集、実行、簡単なデバッグ）から少しずつ覚えていけば大丈夫です。
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- デバッグ -->
+        <div id="debug-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🐛</div>
+                    <div class="term-title-group">
+                        <h2>デバッグ</h2>
+                        <div class="term-english">Debug</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    プログラムの不具合（<span class="tooltip">バグ
+                        <span class="tooltiptext">プログラムの誤りや不具合のこと。1940年代、コンピュータに実際の虫（bug）が入り込んで故障したことが語源とされています。</span>
+                    </span>）を見つけて修正する作業。プログラムの実行を制御しながら、変数の値や処理の流れを詳しく調査できます。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 デバッグの基本</h3>
+                    <p>
+                        デバッグは、プログラムが期待通りに動作しない原因を特定し、修正する重要な作業です。
+                        IDEの<span class="tooltip">デバッガ
+                            <span class="tooltiptext">プログラムの実行を制御し、内部状態を調査するためのツール。ブレークポイントの設定、変数の監視、ステップ実行などの機能を提供します。</span>
+                        </span>を使うことで、効率的にバグを発見できます。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>よくあるバグの種類：</strong></p>
+                        <ul>
+                            <li><strong>構文エラー</strong> - 文法の誤り（<span class="mini-tooltip" data-tip="例：セミコロンの付け忘れ">；</span>）</li>
+                            <li><strong>論理エラー</strong> - ロジックの誤り（<span class="mini-tooltip" data-tip="例：<=を<と書いてしまう">条件式の間違い</span>）</li>
+                            <li><strong>実行時エラー</strong> - 実行中に発生（<span class="mini-tooltip" data-tip="例：配列の範囲外アクセス">範囲外エラー</span>）</li>
+                            <li><strong>型エラー</strong> - データ型の不一致</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🔍 デバッグの基本的な流れ</h3>
+                    
+                    <div class="code-block">
+<span class="code-comment">// 例：合計を計算するプログラム（バグあり）</span>
+<span class="code-keyword">function</span> calculateTotal(prices) {
+    <span class="code-keyword">let</span> total = <span class="code-number">0</span>;
+    
+    <span class="code-keyword">for</span> (<span class="code-keyword">let</span> i = <span class="code-number">0</span>; i <= prices.length; i++) {  <span class="code-comment">// バグ：<=は<であるべき</span>
+        total = total + prices[i];
+    }
+    
+    <span class="code-keyword">return</span> total;
+}
+
+<span class="code-keyword">const</span> prices = [<span class="code-number">100</span>, <span class="code-number">200</span>, <span class="code-number">300</span>];
+<span class="code-keyword">const</span> result = calculateTotal(prices);  <span class="code-comment">// エラーが発生！</span>
+                    </div>
+                    
+                    <p>上記のコードには、配列の範囲を超えてアクセスしようとするバグがあります。</p>
+                </div>
+                
+                <div class="interactive-demo">
+                    <div class="demo-title">デバッグプロセスを体験してみよう</div>
+                    <p>実際にデバッガを使ってバグを発見する過程を体験できます。</p>
+                    
+                    <div class="demo-content">
+                        <div class="mini-ide">
+                            <div class="mini-ide-header">
+                                <button class="mini-ide-btn" onclick="startDebugDemo()">▶️ デバッグ開始</button>
+                                <button class="mini-ide-btn" onclick="stepDebug()">⏭️ 次へ</button>
+                                <button class="mini-ide-btn" onclick="stopDebugDemo()">⏹️ 停止</button>
+                                <span class="step-counter" id="debugStep">準備中</span>
+                            </div>
+                            <div class="mini-ide-content" id="debugCode">
+                                <div>function calculateTotal(prices) {</div>
+                                <div>    let total = 0;</div>
+                                <div>    </div>
+                                <div>    for (let i = 0; i <= prices.length; i++) {</div>
+                                <div>        total = total + prices[i];</div>
+                                <div>    }</div>
+                                <div>    </div>
+                                <div>    return total;</div>
+                                <div>}</div>
+                            </div>
+                            <div class="mini-ide-output" id="debugOutput">
+                                デバッグ出力がここに表示されます...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 デバッグのテクニック</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>テクニック</th>
+                            <th>説明</th>
+                            <th>使用場面</th>
+                        </tr>
+                        <tr>
+                            <td><strong>ブレークポイント</strong></td>
+                            <td>特定の行で実行を一時停止</td>
+                            <td>怪しい箇所の直前で停止したい時</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ウォッチ式</strong></td>
+                            <td>変数や式の値を監視</td>
+                            <td>特定の変数の変化を追跡したい時</td>
+                        </tr>
+                        <tr>
+                            <td><strong>条件付きブレークポイント</strong></td>
+                            <td>条件が真の時のみ停止</td>
+                            <td>特定の条件でのみ発生するバグ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ログ出力</strong></td>
+                            <td>console.logで値を出力</td>
+                            <td>簡単な値の確認</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+        </div>
+        
+        <!-- ブレークポイント -->
+        <div id="breakpoint-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🔴</div>
+                    <div class="term-title-group">
+                        <h2>ブレークポイント</h2>
+                        <div class="term-english">Breakpoint</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    プログラムの実行を一時停止させたい行に設定する目印。デバッグの基本となる重要な機能で、プログラムの特定の場所で実行を止めて
+                    <span class="tooltip">状態を確認
+                        <span class="tooltiptext">その時点での変数の値、メモリの状態、実行している関数などを詳しく調べることができます。バグの原因を特定する上で非常に重要です。</span>
+                    </span>できます。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 ブレークポイントの仕組み</h3>
+                    <p>
+                        ブレークポイントは、「ここでプログラムを一時停止してください」という指示を
+                        <span class="tooltip">デバッガ
+                            <span class="tooltiptext">プログラムの実行を制御し、デバッグを支援するツール。IDEに組み込まれており、ブレークポイントの管理、変数の監視、ステップ実行などの機能を提供します。</span>
+                        </span>に与える機能です。
+                        通常、コードエディタの行番号の左側をクリックすることで設定できます。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>ブレークポイントが便利な場面：</strong></p>
+                        <ul>
+                            <li><span class="tooltip">ループ
+                                <span class="tooltiptext">同じ処理を繰り返す構造。for文やwhile文など。ループ内の変数がどのように変化するかを確認したい時にブレークポイントが有効です。</span>
+                            </span>の中で変数がどう変化するか確認したい時</li>
+                            <li>条件分岐でどちらの経路を通るか調べたい時</li>
+                            <li>メソッドに渡される引数の値を確認したい時</li>
+                            <li>エラーが発生する直前の状態を調べたい時</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 ブレークポイントの種類</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>種類</th>
+                            <th>説明</th>
+                            <th>使用例</th>
+                        </tr>
+                        <tr>
+                            <td><strong>通常のブレークポイント</strong></td>
+                            <td>その行に到達したら必ず停止</td>
+                            <td>基本的なデバッグ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>条件付きブレークポイント</strong></td>
+                            <td>指定した条件が真の時のみ停止</td>
+                            <td><code>i == 100</code> の時だけ停止</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ヒットカウント</strong></td>
+                            <td>指定回数目の実行で停止</td>
+                            <td>ループの100回目で停止</td>
+                        </tr>
+                        <tr>
+                            <td><strong>例外ブレークポイント</strong></td>
+                            <td><span class="tooltip">例外
+                                <span class="tooltiptext">プログラムの実行中に発生するエラー。ゼロ除算、ファイルが見つからない、メモリ不足などが原因で発生します。</span>
+                            </span>が発生したら停止</td>
+                            <td>エラー発生箇所の特定</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="interactive-demo">
+                    <div class="demo-title">ブレークポイントの設定と動作を体験</div>
+                    <p>行番号をクリックしてブレークポイントを設定し、プログラムがどこで停止するか確認してみましょう。</p>
+                    
+                    <div class="demo-content">
+                        <div class="mini-ide">
+                            <div class="mini-ide-header">
+                                <button class="mini-ide-btn" onclick="runWithBreakpoints()">▶️ 実行</button>
+                                <span style="margin-left: 1rem; color: #666;">行番号をクリックしてブレークポイントを設定</span>
+                            </div>
+                            <div class="mini-ide-content" style="display: flex;">
+                                <div id="lineNumbers" style="background: #f8f9fa; padding: 1rem 0.5rem; border-right: 1px solid #dee2e6; user-select: none;">
+                                    <div style="cursor: pointer; padding: 0 8px;" onclick="toggleBreakpoint(0)">1</div>
+                                    <div style="cursor: pointer; padding: 0 8px;" onclick="toggleBreakpoint(1)">2</div>
+                                    <div style="cursor: pointer; padding: 0 8px;" onclick="toggleBreakpoint(2)">3</div>
+                                    <div style="cursor: pointer; padding: 0 8px;" onclick="toggleBreakpoint(3)">4</div>
+                                    <div style="cursor: pointer; padding: 0 8px;" onclick="toggleBreakpoint(4)">5</div>
+                                </div>
+                                <div style="flex: 1; padding: 1rem;">
+                                    <div>for (let i = 1; i <= 5; i++) {</div>
+                                    <div>    console.log("カウント: " + i);</div>
+                                    <div>    if (i === 3) {</div>
+                                    <div>        console.log("中間地点！");</div>
+                                    <div>    }</div>
+                                </div>
+                            </div>
+                            <div class="mini-ide-output" id="breakpointOutput">
+                                実行結果がここに表示されます...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hint-box">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>プロのコツ：</strong>
+                        ブレークポイントを使いすぎると、デバッグが煩雑になります。
+                        まず<span class="tooltip">仮説を立て
+                            <span class="tooltiptext">「おそらくこの部分でエラーが発生しているはず」という予測を立てること。経験を積むと、エラーメッセージやプログラムの動作から原因を推測できるようになります。</span>
+                        </span>、問題の原因を絞り込んでから、必要最小限のブレークポイントを設定しましょう。
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- ステップ実行 -->
+        <div id="step-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">👣</div>
+                    <div class="term-title-group">
+                        <h2>ステップ実行（ステップイン・ステップオーバー）</h2>
+                        <div class="term-english">Step Execution (Step Into / Step Over)</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    デバッグ中にプログラムを1行ずつ実行する機能。
+                    <span class="tooltip">ステップイン
+                        <span class="tooltiptext">メソッドや関数の呼び出しがある行で使用すると、そのメソッドの中に入って最初の行から実行を続けます。内部の動作を詳しく調べたい時に使います。</span>
+                    </span>はメソッドの中に入り、
+                    <span class="tooltip">ステップオーバー
+                        <span class="tooltiptext">現在の行を実行して次の行に進みます。メソッド呼び出しがあっても、その中には入らずに結果だけを得て次に進みます。</span>
+                    </span>はメソッドを実行して次の行へ進みます。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 ステップ実行の基本概念</h3>
+                    <p>
+                        ステップ実行は、プログラムの実行を細かく制御する機能です。
+                        ブレークポイントで停止した後、1行ずつプログラムを進めながら、変数の変化や処理の流れを詳しく観察できます。
+                    </p>
+                    
+                    <div class="code-block">
+<span class="code-keyword">function</span> main() {
+    <span class="code-keyword">const</span> x = <span class="code-number">10</span>;
+    <span class="code-keyword">const</span> y = <span class="code-number">20</span>;
+    <span class="code-keyword">const</span> result = add(x, y);  <span class="code-comment">// ← ここで選択が必要</span>
+    console.log(result);
+}
+
+<span class="code-keyword">function</span> add(a, b) {
+    <span class="code-keyword">const</span> sum = a + b;
+    <span class="code-keyword">return</span> sum;
+}
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>⬇️ ステップイン（Step Into）</h3>
+                    <p>
+                        メソッドや関数の呼び出しがある行で使用すると、そのメソッドの中に入って最初の行から実行を続けます。
+                        メソッドの内部動作を詳しく調べたい時に使用します。
+                    </p>
+                    
+                    <div class="important-point">
+                        <strong>使用場面：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li>自分が書いたメソッドの動作を確認したい時</li>
+                            <li>引数がどのように処理されるか追跡したい時</li>
+                            <li>複雑な処理の流れを理解したい時</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>➡️ ステップオーバー（Step Over）</h3>
+                    <p>
+                        現在の行を実行して次の行に進みます。メソッド呼び出しがあっても、その中には入らずに結果だけを得て次に進みます。
+                    </p>
+                    
+                    <div class="important-point">
+                        <strong>使用場面：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li>信頼できる<span class="tooltip">ライブラリメソッド
+                                <span class="tooltiptext">標準ライブラリや外部ライブラリが提供するメソッド。内部の実装は複雑で、通常はデバッグの対象外です。</span>
+                            </span>の内部は見る必要がない時</li>
+                            <li>プログラムの大まかな流れを追いたい時</li>
+                            <li>特定の部分だけに注目したい時</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="interactive-demo">
+                    <div class="demo-title">ステップインとステップオーバーの違いを体験</div>
+                    <p>実際にステップ実行を試して、それぞれの動作の違いを理解しましょう。</p>
+                    
+                    <div class="demo-content">
+                        <button class="demo-btn" onclick="startStepDemo()">デモを開始</button>
+                        <div id="stepDemoArea" style="display: none;">
+                            <div class="progress-indicator">
+                                <span>実行位置：</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="stepProgress" style="width: 0%;"></div>
+                                </div>
+                                <span id="stepLocation">開始前</span>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                <button class="demo-btn" onclick="doStepInto()">⬇️ ステップイン</button>
+                                <button class="demo-btn" onclick="doStepOver()">➡️ ステップオーバー</button>
+                            </div>
+                            
+                            <div class="code-block" style="margin-top: 1rem;">
+                                <div id="stepCode"></div>
+                            </div>
+                            
+                            <div class="hint-box" style="margin-top: 1rem;">
+                                <span class="hint-icon">💡</span>
+                                <div id="stepHint">ブレークポイントで停止中。ステップインかステップオーバーを選んでください。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <div>
+                        <strong>注意：</strong>
+                        <span class="tooltip">システムライブラリ
+                            <span class="tooltiptext">プログラミング言語やOSが提供する基本的なライブラリ。内部実装は非常に複雑で、通常のデバッグでは立ち入る必要がありません。</span>
+                        </span>のメソッドにステップインすると、複雑なコードに迷い込む可能性があります。
+                        必要な部分だけにステップインするよう心がけましょう。
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- イミディエイト -->
+        <div id="immediate-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">💬</div>
+                    <div class="term-title-group">
+                        <h2>イミディエイトウィンドウ</h2>
+                        <div class="term-english">Immediate Window</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    デバッグ中に
+                    <span class="tooltip">式を評価
+                        <span class="tooltiptext">プログラムの式や計算を実行して結果を確認すること。例：2 + 3 * 4 の結果を計算したり、変数の値を確認したりできます。</span>
+                    </span>したり、変数の値を確認・変更できる対話型ウィンドウ。「即座に」結果を確認できることから、この名前が付いています。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 イミディエイトウィンドウとは</h3>
+                    <p>
+                        イミディエイトウィンドウは、デバッグ中にリアルタイムでコードを実行できる強力なツールです。
+                        変数の現在値を確認したり、メソッドを呼び出したり、さらには変数の値を変更してプログラムの動作をテストすることもできます。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>イミディエイトウィンドウでできること：</strong></p>
+                        <div class="code-block">
+<span class="code-comment">// 変数の値を確認</span>
+? userName
+<span class="code-string">"田中太郎"</span>
+
+<span class="code-comment">// 式を評価</span>
+? age >= <span class="code-number">20</span> && hasLicense
+<span class="code-keyword">true</span>
+
+<span class="code-comment">// メソッドを呼び出し</span>
+? calculateTax(<span class="code-number">1000</span>)
+<span class="code-number">108</span>
+
+<span class="code-comment">// 変数の値を変更</span>
+userName = <span class="code-string">"佐藤花子"</span>
+<span class="code-string">"佐藤花子"</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 イミディエイトウィンドウの活用方法</h3>
+                    
+                    <ul>
+                        <li>
+                            <strong>複雑な条件式のテスト</strong>
+                            <p>if文の条件が複雑な場合、その条件式を貼り付けて結果を確認</p>
+                        </li>
+                        <li>
+                            <strong>メソッドの動作確認</strong>
+                            <p>異なる引数でメソッドを呼び出し、結果を比較</p>
+                        </li>
+                        <li>
+                            <strong>デバッグ中の値の修正</strong>
+                            <p>バグの原因となっている値を一時的に変更して、修正後の動作を確認</p>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="interactive-demo">
+                    <div class="demo-title">イミディエイトウィンドウを使ってみよう</div>
+                    <p>実際にコマンドを入力して、変数の確認や式の評価を体験できます。</p>
+                    
+                    <div class="demo-content">
+                        <div style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px;">
+                            <div style="font-family: 'Consolas', monospace; font-size: 13px;">
+                                <div style="color: #569cd6;">// 現在のコンテキスト：デバッグ中</div>
+                                <div style="color: #608b4e;">// 変数: user = {name: "山田", age: 25, score: 85}</div>
+                                <div style="color: #608b4e;">// 変数: items = ["Apple", "Banana", "Orange"]</div>
+                                <div style="margin-top: 1rem;" id="immediateHistory"></div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                <span style="color: #d4d4d4;">></span>
+                                <input type="text" id="immediateInput" 
+                                       style="flex: 1; background: #2d2d30; border: 1px solid #3e3e42; 
+                                              color: #d4d4d4; padding: 0.3rem; font-family: 'Consolas', monospace;"
+                                       placeholder="コマンドを入力 (例: ? user.name)"
+                                       onkeypress="handleImmediateInput(event)">
+                                <button onclick="executeImmediate()" 
+                                        style="padding: 0.3rem 1rem; background: var(--primary-color); 
+                                               color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    実行
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="hint-box" style="margin-top: 1rem;">
+                            <span class="hint-icon">💡</span>
+                            <div>
+                                <strong>試してみよう：</strong>
+                                <code>? user.name</code>、<code>? user.age > 20</code>、<code>? items.length</code>、
+                                <code>user.score = 90</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="important-point">
+                    <strong>便利な使い方：</strong>
+                    <p>
+                        イミディエイトウィンドウは、
+                        <span class="tooltip">REPL
+                            <span class="tooltiptext">Read-Eval-Print Loop の略。コードを入力（Read）→評価（Eval）→結果表示（Print）→繰り返し（Loop）という対話型の実行環境。</span>
+                        </span>として機能し、デバッグ中の状態を自由に探索できます。
+                    </p>
+                </div>
+            </section>
+        </div>
+        
+        <!-- プロジェクト -->
+        <div id="project-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">📁</div>
+                    <div class="term-title-group">
+                        <h2>プロジェクトとソリューション</h2>
+                        <div class="term-english">Project & Solution</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    <span class="tooltip">プロジェクト
+                        <span class="tooltiptext">一つのアプリケーションやライブラリを構成するファイルの集まり。ソースコード、リソース、設定ファイルなどが含まれます。</span>
+                    </span>は一つのアプリケーションを構成するファイルの集まり。
+                    <span class="tooltip">ソリューション
+                        <span class="tooltiptext">関連する複数のプロジェクトをまとめたコンテナ。大規模なシステムでは、複数のプロジェクトを1つのソリューションで管理します。</span>
+                    </span>は関連する複数のプロジェクトをまとめたものです。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 プロジェクトの概念</h3>
+                    <p>
+                        プロジェクトは、アプリケーションを作るために必要なすべてのファイルを整理・管理する単位です。
+                        ソースコード、画像、設定ファイル、外部ライブラリへの参照など、アプリケーションに必要なすべての要素が含まれます。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>プロジェクトの構造例：</strong></p>
+                        <pre style="background: #f8f9fa; padding: 1rem; border-radius: 4px; font-family: monospace;">
+📁 MyApp.csproj
+├── 📁 Properties/
+│   └── 📄 AssemblyInfo.cs
+├── 📁 Models/
+│   ├── 📄 User.cs
+│   └── 📄 Product.cs
+├── 📁 Views/
+│   ├── 📄 MainForm.cs
+│   └── 📄 LoginDialog.cs
+├── 📁 Controllers/
+│   └── 📄 AppController.cs
+├── 📁 Resources/
+│   ├── 🖼️ logo.png
+│   └── 📄 strings.resx
+├── 📄 Program.cs
+└── 📄 App.config
+                        </pre>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 プロジェクトの種類</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>プロジェクトタイプ</th>
+                            <th>説明</th>
+                            <th>出力</th>
+                        </tr>
+                        <tr>
+                            <td><strong>コンソールアプリケーション</strong></td>
+                            <td><span class="tooltip">コマンドライン
+                                <span class="tooltiptext">テキストベースのインターフェース。Windows のコマンドプロンプトや Mac/Linux のターミナルで動作します。</span>
+                            </span>で動作するプログラム</td>
+                            <td>.exe</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Windowsフォーム</strong></td>
+                            <td><span class="tooltip">GUI
+                                <span class="tooltiptext">Graphical User Interface の略。ボタンやテキストボックスなど、視覚的な要素を使ったインターフェース。</span>
+                            </span>付きのデスクトップアプリ</td>
+                            <td>.exe</td>
+                        </tr>
+                        <tr>
+                            <td><strong>クラスライブラリ</strong></td>
+                            <td>他のプロジェクトで使用する部品</td>
+                            <td><span class="tooltip">.dll
+                                <span class="tooltiptext">Dynamic Link Library の略。実行時に動的にリンクされるライブラリファイル。複数のプログラムで共有して使用できます。</span>
+                            </span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Webアプリケーション</strong></td>
+                            <td>ブラウザで動作するアプリ</td>
+                            <td>複数ファイル</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="content-section">
+                    <h3>📁 ソリューションとは</h3>
+                    <p>
+                        ソリューションは、関連する複数のプロジェクトをまとめて管理するコンテナです。
+                        例えば、メインアプリケーション、共通ライブラリ、テストプロジェクトなどを1つのソリューションにまとめます。
+                    </p>
+                    
+                    <div class="interactive-demo">
+                        <div class="demo-title">プロジェクト構造を探索してみよう</div>
+                        <p>実際のプロジェクトがどのように構成されているか、インタラクティブに確認できます。</p>
+                        
+                        <div class="demo-content">
+                            <div id="projectExplorer" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem;">
+                                <div style="font-weight: bold; margin-bottom: 1rem;">ソリューション 'ECサイト'</div>
+                                <div id="projectTree"></div>
+                            </div>
+                            <button class="demo-btn" onclick="showProjectStructure()">プロジェクト構造を表示</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hint-box">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>ベストプラクティス：</strong>
+                        プロジェクトは機能や
+                        <span class="tooltip">責任範囲
+                            <span class="tooltiptext">各プロジェクトが担当する機能の範囲。例：UI層（画面表示）、ビジネスロジック層（業務処理）、データアクセス層（データベース操作）など。</span>
+                        </span>で分割しましょう。
+                        例：UI層、ビジネスロジック層、データアクセス層など。
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- ビルド・コンパイル -->
+        <div id="build-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🔨</div>
+                    <div class="term-title-group">
+                        <h2>ビルドとコンパイル</h2>
+                        <div class="term-english">Build & Compile</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    <span class="tooltip">コンパイル
+                        <span class="tooltiptext">人間が読み書きできるソースコード（高級言語）を、コンピュータが理解できる機械語（低級言語）に変換する処理。</span>
+                    </span>はソースコードを機械語に変換する処理。
+                    <span class="tooltip">ビルド
+                        <span class="tooltiptext">コンパイルを含む、実行可能なプログラムを作成する全体のプロセス。リンク、リソースの埋め込み、最適化なども含まれます。</span>
+                    </span>はコンパイルを含む、実行可能なプログラムを作成する全体のプロセスです。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 コンパイルとは</h3>
+                    <p>
+                        コンパイルは、人間が読み書きできるソースコード（高級言語）を、
+                        コンピュータが理解できる
+                        <span class="tooltip">機械語
+                            <span class="tooltiptext">CPUが直接実行できる命令の集まり。0と1の羅列（バイナリ）で表現され、人間には理解困難ですが、コンピュータには最も効率的です。</span>
+                        </span>（低級言語）に変換する処理です。
+                    </p>
+                    
+                    <div class="code-block">
+<span class="code-comment">// ソースコード（人間が理解できる）</span>
+<span class="code-keyword">public class</span> HelloWorld {
+    <span class="code-keyword">public static void</span> Main() {
+        Console.WriteLine(<span class="code-string">"Hello, World!"</span>);
+    }
+}
+
+<span class="code-comment">↓ コンパイル</span>
+
+<span class="code-comment">// 機械語（コンピュータが理解できる）</span>
+01001000 01100101 01101100 01101100 01101111 ...
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🔨 ビルドプロセスの全体像</h3>
+                    <p>
+                        ビルドは、コンパイルを含むより大きなプロセスです。
+                        ソースコードから最終的な実行可能ファイルを作成するまでのすべての工程を含みます。
+                    </p>
+                    
+                    <div class="important-point">
+                        <strong>ビルドプロセスの主な工程：</strong>
+                        <ol style="margin: 0.5rem 0;">
+                            <li><strong>構文チェック</strong> - コードの文法エラーを検出</li>
+                            <li><strong>コンパイル</strong> - ソースコードを中間コードに変換</li>
+                            <li><strong>リンク</strong> - 必要な<span class="tooltip">ライブラリ
+                                <span class="tooltiptext">再利用可能なコードの集まり。他の開発者が作成した機能を利用できます。例：数学計算ライブラリ、データベース接続ライブラリなど。</span>
+                            </span>と結合</li>
+                            <li><strong>リソース埋め込み</strong> - 画像や設定ファイルを組み込み</li>
+                            <li><strong>最適化</strong> - 実行速度やファイルサイズの最適化</li>
+                            <li><strong>出力</strong> - 実行可能ファイル（.exe、.dll）の生成</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="interactive-demo">
+                    <div class="demo-title">ビルドプロセスをシミュレーション</div>
+                    <p>実際のビルドプロセスがどのように進行するか、視覚的に確認してみましょう。</p>
+                    
+                    <div class="demo-content">
+                        <button class="demo-btn" onclick="startBuildDemo()">ビルドを開始</button>
+                        
+                        <div id="buildProgress" style="margin-top: 1.5rem; display: none;">
+                            <div class="progress-indicator">
+                                <span>進行状況：</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="buildProgressBar" style="width: 0%;"></div>
+                                </div>
+                                <span id="buildPercentage">0%</span>
+                            </div>
+                            
+                            <div id="buildOutput" style="background: #1e1e1e; color: #d4d4d4; 
+                                                         padding: 1rem; margin-top: 1rem; 
+                                                         border-radius: 8px; font-family: monospace; 
+                                                         font-size: 13px; min-height: 200px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>⚙️ ビルド構成の種類</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>構成</th>
+                            <th>用途</th>
+                            <th>特徴</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Debug</strong></td>
+                            <td>開発・デバッグ時</td>
+                            <td>
+                                <ul style="margin: 0;">
+                                    <li>デバッグ情報を含む</li>
+                                    <li>最適化なし（デバッグしやすい）</li>
+                                    <li>実行速度は遅い</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Release</strong></td>
+                            <td>本番環境・配布時</td>
+                            <td>
+                                <ul style="margin: 0;">
+                                    <li>デバッグ情報を除外</li>
+                                    <li>コード最適化あり</li>
+                                    <li>実行速度が速い</li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <div>
+                        <strong>よくあるビルドエラー：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li><strong>参照エラー</strong> - 必要なライブラリが見つからない</li>
+                            <li><strong>構文エラー</strong> - セミコロンの忘れ、括弧の不一致</li>
+                            <li><strong>型の不一致</strong> - 変数の型が合わない</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- オブジェクト指向 -->
+        <div id="oop-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🎯</div>
+                    <div class="term-title-group">
+                        <h2>オブジェクト指向の基本概念</h2>
+                        <div class="term-english">Object-Oriented Programming Basics</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    現実世界の「もの」をプログラムで表現する考え方。
+                    <span class="tooltip">クラス
+                        <span class="tooltiptext">オブジェクトの設計図や型。どのようなデータ（プロパティ）と機能（メソッド）を持つかを定義します。例：「車」クラスには色、速度、メーカーなどのプロパティがあります。</span>
+                    </span>（設計図）から
+                    <span class="tooltip">オブジェクト
+                        <span class="tooltiptext">クラスから作成された実体。実際のデータを持ち、メソッドを実行できます。例：「私の車」は「車」クラスから作られた具体的なオブジェクトです。</span>
+                    </span>（実体）を作り、
+                    <span class="tooltip">プロパティ
+                        <span class="tooltiptext">オブジェクトが持つデータや状態。「属性」とも呼ばれます。例：車の色、速度、燃料残量など。</span>
+                    </span>（属性）と
+                    <span class="tooltip">メソッド
+                        <span class="tooltiptext">オブジェクトが実行できる動作や機能。「関数」とも呼ばれます。例：車の「走る」「止まる」「曲がる」など。</span>
+                    </span>（動作）で構成します。
+                </div>
+                
+                <div class="sub-tabs">
+                    <button class="sub-tab active" onclick="showSubTab('oop', 'basics')">基本概念</button>
+                    <button class="sub-tab" onclick="showSubTab('oop', 'class')">クラスとオブジェクト</button>
+                    <button class="sub-tab" onclick="showSubTab('oop', 'property')">プロパティとメソッド</button>
+                    <button class="sub-tab" onclick="showSubTab('oop', 'principles')">OOPの原則</button>
+                </div>
+                
+                <div id="oop-basics" class="sub-content active">
+                    <h3>📖 オブジェクト指向とは</h3>
+                    <p>
+                        オブジェクト指向プログラミング（OOP）は、プログラムを「オブジェクト」という単位で構成する手法です。
+                        現実世界の概念をそのままプログラムに反映できるため、理解しやすく保守しやすいコードが書けます。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>現実世界とプログラムの対応：</strong></p>
+                        <div style="display: flex; gap: 2rem; align-items: center;">
+                            <div style="flex: 1;">
+                                <h4>🚗 現実の車</h4>
+                                <ul>
+                                    <li>色：赤</li>
+                                    <li>速度：60km/h</li>
+                                    <li>メーカー：トヨタ</li>
+                                    <li>動作：走る、止まる、曲がる</li>
+                                </ul>
+                            </div>
+                            <div style="flex: 1;">
+                                <h4>💻 プログラムの車オブジェクト</h4>
+                                <div class="code-block">
+<span class="code-keyword">class</span> Car {
+    <span class="code-comment">// プロパティ（属性）</span>
+    color = <span class="code-string">"赤"</span>;
+    speed = <span class="code-number">60</span>;
+    maker = <span class="code-string">"トヨタ"</span>;
+    
+    <span class="code-comment">// メソッド（動作）</span>
+    run() { ... }
+    stop() { ... }
+    turn() { ... }
+}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="oop-class" class="sub-content">
+                    <h3>🏗️ クラスとオブジェクト</h3>
+                    
+                    <div class="important-point">
+                        <strong>重要な概念：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li><strong>クラス</strong> = 設計図（たい焼きの型）</li>
+                            <li><strong>オブジェクト</strong> = 実体（実際のたい焼き）</li>
+                            <li>1つのクラスから複数のオブジェクトを作成可能</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="interactive-demo">
+                        <div class="demo-title">クラスからオブジェクトを作ってみよう</div>
+                        <p>「人物」クラスから実際のオブジェクトを作成し、プロパティを設定してみましょう。</p>
+                        
+                        <div class="demo-content">
+                            <div style="display: flex; gap: 2rem;">
+                                <div style="flex: 1;">
+                                    <h4>クラス定義</h4>
+                                    <div class="code-block">
+<span class="code-keyword">class</span> Person {
+    name: <span class="code-keyword">string</span>;
+    age: <span class="code-keyword">number</span>;
+    job: <span class="code-keyword">string</span>;
+    
+    introduce() {
+        <span class="code-keyword">return</span> <span class="code-string">`私は${this.name}です。`</span>;
+    }
+}
+                                    </div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <h4>オブジェクト作成</h4>
+                                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                                        <input type="text" id="personName" placeholder="名前" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;">
+                                        <input type="number" id="personAge" placeholder="年齢" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;">
+                                        <input type="text" id="personJob" placeholder="職業" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;">
+                                        <button class="demo-btn" onclick="createPersonObject()">オブジェクトを作成</button>
+                                    </div>
+                                    <div id="objectResult" style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="oop-property" class="sub-content">
+                    <h3>📊 プロパティとメソッド</h3>
+                    
+                    <p>
+                        オブジェクトは「プロパティ」（データ）と「メソッド」（動作）で構成されます。
+                    </p>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>要素</th>
+                            <th>説明</th>
+                            <th>例</th>
+                        </tr>
+                        <tr>
+                            <td><strong>プロパティ</strong></td>
+                            <td>オブジェクトの状態や特徴を表すデータ</td>
+                            <td>
+                                <code>user.name</code><br>
+                                <code>button.enabled</code><br>
+                                <code>car.speed</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>メソッド</strong></td>
+                            <td>オブジェクトが実行できる動作や処理</td>
+                            <td>
+                                <code>user.login()</code><br>
+                                <code>button.click()</code><br>
+                                <code>car.accelerate()</code>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div class="code-block">
+<span class="code-comment">// プロパティの取得と設定</span>
+<span class="code-keyword">const</span> myButton = <span class="code-keyword">new</span> Button();
+
+<span class="code-comment">// プロパティの取得</span>
+<span class="code-keyword">const</span> buttonText = myButton.Text;
+
+<span class="code-comment">// プロパティの設定</span>
+myButton.Text = <span class="code-string">"クリックしてください"</span>;
+myButton.Enabled = <span class="code-keyword">false</span>;  <span class="code-comment">// ボタンを無効化</span>
+myButton.BackColor = Color.Red;
+
+<span class="code-comment">// メソッドの呼び出し</span>
+myButton.Show();  <span class="code-comment">// ボタンを表示</span>
+myButton.Click(); <span class="code-comment">// クリックイベントを発生</span>
+                    </div>
+                </div>
+                
+                <div id="oop-principles" class="sub-content">
+                    <h3>🎯 オブジェクト指向の4原則</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>原則</th>
+                            <th>説明</th>
+                            <th>メリット</th>
+                        </tr>
+                        <tr>
+                            <td><strong>カプセル化</strong></td>
+                            <td>データと処理を1つにまとめ、必要な部分だけを公開</td>
+                            <td>内部の詳細を隠蔽し、使いやすくなる</td>
+                        </tr>
+                        <tr>
+                            <td><strong>継承</strong></td>
+                            <td>既存のクラスの機能を引き継いで新しいクラスを作成</td>
+                            <td>コードの再利用性が向上</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ポリモーフィズム</strong></td>
+                            <td>同じメソッド名で異なる動作を実現</td>
+                            <td>柔軟で拡張しやすい設計</td>
+                        </tr>
+                        <tr>
+                            <td><strong>抽象化</strong></td>
+                            <td>複雑な実装を単純なインターフェースで表現</td>
+                            <td>複雑さを管理しやすくなる</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="hint-box">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>オブジェクト指向の利点：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li>コードの再利用性が高い</li>
+                            <li>大規模なプログラムを整理しやすい</li>
+                            <li>現実世界の概念と対応させやすい</li>
+                            <li>チーム開発で役割分担しやすい</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- リファクタリング -->
+        <div id="refactoring-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">♻️</div>
+                    <div class="term-title-group">
+                        <h2>リファクタリング</h2>
+                        <div class="term-english">Refactoring</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    プログラムの外部から見た動作は変えずに、内部のコード構造を改善する作業。読みやすく、保守しやすいコードにすることが目的です。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 リファクタリングとは</h3>
+                    <p>
+                        リファクタリングは、コードの「動作」は変えずに「品質」を向上させる作業です。
+                        <span class="tooltip">技術的負債
+                            <span class="tooltiptext">急いで書いた汚いコードや、設計の悪さなど、後で修正が必要になる問題。放置すると開発速度が低下し、バグが増える原因になります。</span>
+                        </span>を減らし、将来の開発を効率化します。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>リファクタリングの例：</strong></p>
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="flex: 1;">
+                                <h4>😰 改善前</h4>
+                                <div class="code-block">
+<span class="code-comment">// 読みにくく、意図が不明確</span>
+<span class="code-keyword">if</span> (u.a >= <span class="code-number">20</span> && u.a < <span class="code-number">65</span> && 
+    u.j != <span class="code-keyword">null</span> && u.i > <span class="code-number">300000</span>) {
+    <span class="code-comment">// 処理</span>
+}
+                                </div>
+                            </div>
+                            <div style="flex: 1;">
+                                <h4>😊 改善後</h4>
+                                <div class="code-block">
+<span class="code-comment">// 意図が明確で読みやすい</span>
+<span class="code-keyword">const</span> isWorkingAge = user.age >= <span class="code-number">20</span> && 
+                     user.age < <span class="code-number">65</span>;
+<span class="code-keyword">const</span> hasJob = user.job != <span class="code-keyword">null</span>;
+<span class="code-keyword">const</span> hasEnoughIncome = user.income > <span class="code-number">300000</span>;
+
+<span class="code-keyword">if</span> (isWorkingAge && hasJob && hasEnoughIncome) {
+    <span class="code-comment">// ローン申請可能</span>
+}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 主なリファクタリング手法</h3>
+                    
+                    <ul>
+                        <li>
+                            <strong>メソッド抽出</strong>
+                            <p>長いメソッドを小さな意味のある単位に分割</p>
+                        </li>
+                        <li>
+                            <strong>変数名の改善</strong>
+                            <p>意味不明な変数名を分かりやすい名前に変更</p>
+                        </li>
+                        <li>
+                            <strong>重複コードの削除</strong>
+                            <p>同じ処理を1か所にまとめる</p>
+                        </li>
+                        <li>
+                            <strong>条件式の簡略化</strong>
+                            <p>複雑な条件を分かりやすく整理</p>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="interactive-demo">
+                    <div class="demo-title">リファクタリングを実践してみよう</div>
+                    <p>実際のコードをリファクタリングして、どのように改善されるか確認しましょう。</p>
+                    
+                    <div class="demo-content">
+                        <div id="refactorExample" style="display: none;">
+                            <div style="margin-bottom: 1rem;">
+                                <strong>課題：</strong>以下のコードをリファクタリングしてください
+                            </div>
+                            <div class="code-block" id="refactorOriginal">
+<span class="code-comment">// 価格計算（読みにくいコード）</span>
+<span class="code-keyword">function</span> calc(p, q, t) {
+    <span class="code-keyword">let</span> r = p * q;
+    <span class="code-keyword">if</span> (q > <span class="code-number">10</span>) {
+        r = r * <span class="code-number">0.9</span>;  <span class="code-comment">// 10個以上で10%割引</span>
+    }
+    <span class="code-keyword">if</span> (t == <span class="code-string">"member"</span>) {
+        r = r * <span class="code-number">0.95</span>; <span class="code-comment">// 会員は5%割引</span>
+    }
+    <span class="code-keyword">return</span> r;
+}
+                            </div>
+                            <button class="demo-btn" onclick="showRefactoredCode()">リファクタリング後を表示</button>
+                            <div id="refactoredCode" style="display: none; margin-top: 1rem;"></div>
+                        </div>
+                        <button class="demo-btn" onclick="startRefactorDemo()">リファクタリング演習を開始</button>
+                    </div>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <div>
+                        <strong>リファクタリングの注意点：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li>必ず<span class="tooltip">テスト
+                                <span class="tooltiptext">プログラムが正しく動作することを確認する作業。リファクタリング前後で動作が変わっていないことを保証するために重要です。</span>
+                            </span>を用意してから行う</li>
+                            <li>一度に大きく変更しない（小さなステップで）</li>
+                            <li>動作が変わっていないことを確認する</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- デプロイ -->
+        <div id="deploy-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🚀</div>
+                    <div class="term-title-group">
+                        <h2>デプロイ</h2>
+                        <div class="term-english">Deploy</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    開発したアプリケーションを
+                    <span class="tooltip">本番環境
+                        <span class="tooltiptext">実際にユーザーが使用する環境。開発環境とは異なり、高い信頼性とセキュリティが求められます。サーバー、データベース、ネットワークなどが含まれます。</span>
+                    </span>に配置し、実際にユーザーが使える状態にすること。配備、展開とも呼ばれます。
+                </div>
+                
+                <div class="content-section">
+                    <h3>📖 デプロイの基本概念</h3>
+                    <p>
+                        デプロイは、開発環境で作成したアプリケーションを、実際の運用環境（本番環境）に移す作業です。
+                        単にファイルをコピーするだけでなく、環境設定、データベースの準備、セキュリティ設定なども含まれます。
+                    </p>
+                    
+                    <div class="example-box">
+                        <p><strong>デプロイの流れ：</strong></p>
+                        <ol>
+                            <li><strong>ビルド</strong> - リリース用の最適化されたビルドを作成</li>
+                            <li><strong>テスト</strong> - <span class="tooltip">ステージング環境
+                                <span class="tooltiptext">本番環境と同じ構成のテスト環境。本番デプロイ前の最終確認に使用します。</span>
+                            </span>でのテスト</li>
+                            <li><strong>準備</strong> - 必要なファイルやリソースの準備</li>
+                            <li><strong>転送</strong> - サーバーへのファイル転送</li>
+                            <li><strong>設定</strong> - 環境変数やデータベース接続の設定</li>
+                            <li><strong>確認</strong> - 正常に動作することを確認</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🎯 デプロイ方法の種類</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>方法</th>
+                            <th>特徴</th>
+                            <th>適用場面</th>
+                        </tr>
+                        <tr>
+                            <td><strong>手動デプロイ</strong></td>
+                            <td><span class="tooltip">FTP
+                                <span class="tooltiptext">File Transfer Protocol の略。ファイルをサーバーに転送するための通信プロトコル。</span>
+                            </span>などで手作業でファイルを転送</td>
+                            <td>小規模なWebサイト</td>
+                        </tr>
+                        <tr>
+                            <td><strong>自動デプロイ (<span class="tooltip">CI/CD
+                                <span class="tooltiptext">Continuous Integration/Continuous Delivery の略。コードの変更を自動的にテスト・ビルド・デプロイする仕組み。</span>
+                            </span>)</strong></td>
+                            <td>コード変更を検知して自動的にデプロイ</td>
+                            <td>頻繁に更新されるアプリ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>コンテナデプロイ</strong></td>
+                            <td><span class="tooltip">Docker
+                                <span class="tooltiptext">アプリケーションとその実行環境をパッケージ化する技術。どの環境でも同じように動作します。</span>
+                            </span>などのコンテナ技術を使用</td>
+                            <td>マイクロサービス</td>
+                        </tr>
+                        <tr>
+                            <td><strong>インストーラー配布</strong></td>
+                            <td>セットアップファイルを作成して配布</td>
+                            <td>デスクトップアプリ</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="content-section">
+                    <h3>🚀 現代的なデプロイプロセス</h3>
+                    
+                    <div class="important-point">
+                        <strong>CI/CD（継続的インテグレーション/継続的デリバリー）：</strong>
+                        <p>コードの変更を自動的にテスト・ビルド・デプロイする仕組み。開発効率と品質を大幅に向上させます。</p>
+                    </div>
+                    
+                    <div class="interactive-demo">
+                        <div class="demo-title">デプロイプロセスをシミュレーション</div>
+                        <p>モダンな自動デプロイの流れを体験してみましょう。</p>
+                        
+                        <div class="demo-content">
+                            <button class="demo-btn" onclick="startDeployDemo()">デプロイを開始</button>
+                            
+                            <div id="deployFlow" style="display: none; margin-top: 1.5rem;">
+                                <div id="deploySteps"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hint-box">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>デプロイのベストプラクティス：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li>本番環境と同じ構成のステージング環境でテスト</li>
+                            <li>データベースのバックアップを必ず取る</li>
+                            <li><span class="tooltip">ロールバック
+                                <span class="tooltiptext">デプロイに失敗した場合に、以前のバージョンに戻す作業。必ず準備しておくべき重要な手順です。</span>
+                            </span>（元に戻す）手順を準備</li>
+                            <li>デプロイ時刻はユーザーが少ない時間帯を選ぶ</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- その他の用語 -->
+        <div id="others-tab" class="tab-content">
+            <section class="term-section">
+                <div class="term-header">
+                    <div class="term-icon">🔧</div>
+                    <div class="term-title-group">
+                        <h2>その他の重要な用語</h2>
+                        <div class="term-english">Other Important Terms</div>
+                    </div>
+                </div>
+                
+                <div class="term-summary">
+                    IDE開発で使用されるその他の重要な用語と概念を説明します。
+                </div>
+                
+                <div class="sub-tabs">
+                    <button class="sub-tab active" onclick="showSubTab('others', 'tools')">ツール関連</button>
+                    <button class="sub-tab" onclick="showSubTab('others', 'process')">プロセス関連</button>
+                    <button class="sub-tab" onclick="showSubTab('others', 'config')">設定関連</button>
+                </div>
+                
+                <div id="others-tools" class="sub-content active">
+                    <h3>🛠️ ツール関連の用語</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>用語</th>
+                            <th>説明</th>
+                            <th>使用例</th>
+                        </tr>
+                        <tr>
+                            <td><strong>アドイン</strong></td>
+                            <td>IDEの機能を拡張するプラグイン</td>
+                            <td>コード整形ツール、追加言語サポート</td>
+                        </tr>
+                        <tr>
+                            <td><strong>プロファイル</strong></td>
+                            <td>プログラムの実行時間やメモリ使用量を分析</td>
+                            <td>パフォーマンスのボトルネック特定</td>
+                        </tr>
+                        <tr>
+                            <td><strong>アタッチ</strong></td>
+                            <td>実行中のプロセスにデバッガを接続</td>
+                            <td>本番環境でのデバッグ</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div id="others-process" class="sub-content">
+                    <h3>📋 プロセス関連の用語</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>用語</th>
+                            <th>説明</th>
+                            <th>特徴</th>
+                        </tr>
+                        <tr>
+                            <td><strong>プロシージャ</strong></td>
+                            <td>一連の処理をまとめた手続き</td>
+                            <td>引数を受け取り、処理を実行</td>
+                        </tr>
+                        <tr>
+                            <td><strong>レビュー</strong></td>
+                            <td>コードの品質を確認する作業</td>
+                            <td>バグの早期発見、知識共有</td>
+                        </tr>
+                        <tr>
+                            <td><strong>定義</strong></td>
+                            <td>変数や関数を宣言すること</td>
+                            <td>使用前に必ず定義が必要</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div id="others-config" class="sub-content">
+                    <h3>⚙️ 設定関連の用語</h3>
+                    
+                    <table class="info-table">
+                        <tr>
+                            <th>用語</th>
+                            <th>説明</th>
+                            <th>内容例</th>
+                        </tr>
+                        <tr>
+                            <td><strong>App.Config</strong></td>
+                            <td>アプリケーションの設定ファイル</td>
+                            <td>接続文字列、アプリ設定値</td>
+                        </tr>
+                        <tr>
+                            <td><strong>パラメーター</strong></td>
+                            <td>メソッドに渡す値（引数）</td>
+                            <td>関数の入力値</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Commons</strong></td>
+                            <td>共通で使用されるコードやリソース</td>
+                            <td>ユーティリティクラス、共通定数</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="hint-box">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>用語を覚えるコツ：</strong>
+                        実際にIDEを使いながら、各機能を試してみることで自然に覚えられます。
+                        最初はよく使う基本的な用語から覚えていきましょう。
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <script>
+        // タブ切り替え
+        function showTab(tabId) {
+            // すべてのタブコンテンツを非表示
+            const allContents = document.querySelectorAll('.tab-content');
+            allContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // すべてのタブボタンから active を削除
+            const allButtons = document.querySelectorAll('.tab-button');
+            allButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 選択されたタブを表示
+            const selectedContent = document.getElementById(tabId + '-tab');
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+            
+            // 選択されたボタンに active を追加
+            event.target.classList.add('active');
+        }
+        
+        // サブタブ切り替え
+        function showSubTab(mainTab, subTab) {
+            // サブタブボタンの active 切り替え
+            const subTabButtons = event.target.parentElement.querySelectorAll('.sub-tab');
+            subTabButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // サブコンテンツの表示切り替え
+            const mainContent = event.target.closest('.tab-content');
+            const subContents = mainContent.querySelectorAll('.sub-content');
+            subContents.forEach(content => content.classList.remove('active'));
+            
+            const selectedSubContent = document.getElementById(mainTab + '-' + subTab);
+            if (selectedSubContent) {
+                selectedSubContent.classList.add('active');
+            }
+        }
+        
+        // デバッグデモ
+        let debugStep = 0;
+        let debugInterval;
+        
+        function startDebugDemo() {
+            debugStep = 0;
+            const output = document.getElementById('debugOutput');
+            const stepCounter = document.getElementById('debugStep');
+            
+            output.innerHTML = '<span style="color: #569cd6;">デバッグを開始しました...</span>\n';
+            stepCounter.textContent = 'ステップ 0';
+            
+            const steps = [
+                { line: 1, message: 'function calculateTotal(prices) に入りました' },
+                { line: 2, message: 'let total = 0; → total: 0' },
+                { line: 4, message: 'for ループ開始: i = 0, prices.length = 3' },
+                { line: 5, message: 'total = 0 + prices[0] → total: 100' },
+                { line: 4, message: 'ループ継続: i = 1' },
+                { line: 5, message: 'total = 100 + prices[1] → total: 300' },
+                { line: 4, message: 'ループ継続: i = 2' },
+                { line: 5, message: 'total = 300 + prices[2] → total: 600' },
+                { line: 4, message: 'ループ継続: i = 3 ⚠️ 配列の範囲外！', error: true },
+                { line: 5, message: 'エラー: prices[3] is undefined', error: true }
+            ];
+            
+            debugInterval = setInterval(() => {
+                if (debugStep < steps.length) {
+                    const step = steps[debugStep];
+                    const color = step.error ? '#f44336' : '#4ec9b0';
+                    output.innerHTML += `<span style="color: ${color};">行 ${step.line}: ${step.message}</span>\n`;
+                    stepCounter.textContent = `ステップ ${debugStep + 1}`;
+                    
+                    // 該当行をハイライト
+                    const codeLines = document.querySelectorAll('#debugCode > div');
+                    codeLines.forEach(line => line.classList.remove('line-highlight'));
+                    if (codeLines[step.line - 1]) {
+                        codeLines[step.line - 1].classList.add('line-highlight');
+                    }
+                    
+                    debugStep++;
+                } else {
+                    clearInterval(debugInterval);
+                    output.innerHTML += '\n<span style="color: #ff9800;">バグ発見: ループ条件が "i <= prices.length" になっています。</span>\n';
+                    output.innerHTML += '<span style="color: #4caf50;">修正案: "i < prices.length" に変更してください。</span>';
+                }
+                
+                output.scrollTop = output.scrollHeight;
+            }, 1500);
+        }
+        
+        function stepDebug() {
+            // 手動ステップ実行
+            if (debugInterval) {
+                clearInterval(debugInterval);
+            }
+            // ステップ実行のロジック
+        }
+        
+        function stopDebugDemo() {
+            if (debugInterval) {
+                clearInterval(debugInterval);
+            }
+            const output = document.getElementById('debugOutput');
+            output.innerHTML += '\n<span style="color: #569cd6;">デバッグを停止しました。</span>';
+        }
+        
+        // ブレークポイントデモ
+        const breakpoints = new Set();
+        
+        function toggleBreakpoint(line) {
+            const lineEl = document.querySelectorAll('#lineNumbers > div')[line];
+            if (breakpoints.has(line)) {
+                breakpoints.delete(line);
+                lineEl.style.background = 'transparent';
+                lineEl.innerHTML = lineEl.innerHTML.replace('🔴 ', '');
+            } else {
+                breakpoints.add(line);
+                lineEl.style.background = '#ffebee';
+                lineEl.innerHTML = '🔴 ' + (line + 1);
+            }
+        }
+        
+        function runWithBreakpoints() {
+            const output = document.getElementById('breakpointOutput');
+            output.innerHTML = '';
+            
+            if (breakpoints.size === 0) {
+                output.innerHTML = '<span style="color: #ff9800;">ブレークポイントが設定されていません。行番号をクリックして設定してください。</span>';
+                return;
+            }
+            
+            output.innerHTML = '<span style="color: #569cd6;">実行を開始します...</span>\n\n';
+            
+            const sortedBreakpoints = Array.from(breakpoints).sort((a, b) => a - b);
+            
+            sortedBreakpoints.forEach((bp, index) => {
+                setTimeout(() => {
+                    output.innerHTML += `<span style="color: #f44336;">● ブレークポイント（行 ${bp + 1}）で停止</span>\n`;
+                    
+                    switch(bp) {
+                        case 0:
+                            output.innerHTML += '  変数 i = 1\n';
+                            break;
+                        case 1:
+                            output.innerHTML += '  カウント: 1 を出力\n';
+                            break;
+                        case 2:
+                            output.innerHTML += '  条件判定: i === 3 → false\n';
+                            break;
+                        case 3:
+                            output.innerHTML += '  "中間地点！" を出力\n';
+                            break;
+                    }
+                    
+                    output.innerHTML += '\n';
+                    output.scrollTop = output.scrollHeight;
+                }, (index + 1) * 1000);
+            });
+        }
+        
+        // ステップ実行デモ
+        let stepDemoState = 'start';
+        
+        function startStepDemo() {
+            document.getElementById('stepDemoArea').style.display = 'block';
+            stepDemoState = 'main_line3';
+            updateStepDisplay();
+        }
+        
+        function doStepInto() {
+            if (stepDemoState === 'main_line3') {
+                stepDemoState = 'add_line1';
+                document.getElementById('stepProgress').style.width = '50%';
+                document.getElementById('stepLocation').textContent = 'add関数内';
+                document.getElementById('stepHint').textContent = 'add関数の中に入りました。変数aとbの値を確認できます。';
+            } else if (stepDemoState === 'add_line1') {
+                stepDemoState = 'add_line2';
+                document.getElementById('stepProgress').style.width = '75%';
+                document.getElementById('stepHint').textContent = 'sumを計算しました: 10 + 20 = 30';
+            } else if (stepDemoState === 'add_line2') {
+                stepDemoState = 'main_line4';
+                document.getElementById('stepProgress').style.width = '100%';
+                document.getElementById('stepLocation').textContent = 'main関数に戻る';
+                document.getElementById('stepHint').textContent = 'add関数から戻り、resultに30が代入されました。';
+            }
+            updateStepDisplay();
+        }
+        
+        function doStepOver() {
+            if (stepDemoState === 'main_line3') {
+                stepDemoState = 'main_line4';
+                document.getElementById('stepProgress').style.width = '100%';
+                document.getElementById('stepLocation').textContent = 'main関数';
+                document.getElementById('stepHint').textContent = 'add関数を実行（中には入らない）し、resultに30が代入されました。';
+            }
+            updateStepDisplay();
+        }
+        
+        function updateStepDisplay() {
+            const codeDisplay = document.getElementById('stepCode');
+            let highlightLine = 0;
+            
+            switch(stepDemoState) {
+                case 'main_line3':
+                    highlightLine = 2;
+                    break;
+                case 'add_line1':
+                    highlightLine = 7;
+                    break;
+                case 'add_line2':
+                    highlightLine = 8;
+                    break;
+                case 'main_line4':
+                    highlightLine = 3;
+                    break;
+            }
+            
+            codeDisplay.innerHTML = `
+<div ${highlightLine === 0 ? 'class="line-highlight"' : ''}>function main() {</div>
+<div ${highlightLine === 1 ? 'class="line-highlight"' : ''}>    const x = 10;</div>
+<div ${highlightLine === 2 ? 'class="line-highlight"' : ''}>    const result = add(x, 20);  ← 現在の位置</div>
+<div ${highlightLine === 3 ? 'class="line-highlight"' : ''}>    console.log(result);</div>
+<div>}</div>
+<div></div>
+<div ${highlightLine === 6 ? 'class="line-highlight"' : ''}>function add(a, b) {</div>
+<div ${highlightLine === 7 ? 'class="line-highlight"' : ''}>    const sum = a + b;</div>
+<div ${highlightLine === 8 ? 'class="line-highlight"' : ''}>    return sum;</div>
+<div>}</div>
+            `;
+        }
+        
+        // イミディエイトウィンドウ
+        function handleImmediateInput(event) {
+            if (event.key === 'Enter') {
+                executeImmediate();
+            }
+        }
+        
+        function executeImmediate() {
+            const input = document.getElementById('immediateInput');
+            const history = document.getElementById('immediateHistory');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            // コマンドを履歴に追加
+            const cmdLine = document.createElement('div');
+            cmdLine.innerHTML = `<span style="color: #d4d4d4;">> ${command}</span>`;
+            history.appendChild(cmdLine);
+            
+            // 簡単な評価ロジック
+            let result = '';
+            let resultColor = '#4ec9b0';
+            
+            // サンプルデータ
+            const context = {
+                user: { name: "山田", age: 25, score: 85 },
+                items: ["Apple", "Banana", "Orange"]
+            };
+            
+            try {
+                if (command.startsWith('?')) {
+                    // 評価コマンド
+                    const expr = command.substring(1).trim();
+                    if (expr === 'user.name') result = '"山田"';
+                    else if (expr === 'user.age') result = '25';
+                    else if (expr === 'user.score') result = '85';
+                    else if (expr === 'user') result = '{name: "山田", age: 25, score: 85}';
+                    else if (expr === 'items') result = '["Apple", "Banana", "Orange"]';
+                    else if (expr === 'items.length') result = '3';
+                    else if (expr === 'user.age > 20') result = 'true';
+                    else if (expr === 'user.score >= 80') result = 'true';
+                    else result = 'undefined';
+                } else if (command.includes('=')) {
+                    // 代入コマンド
+                    const parts = command.split('=');
+                    const varName = parts[0].trim();
+                    const value = parts[1].trim();
+                    
+                    if (varName === 'user.score') {
+                        result = value;
+                        resultColor = '#ce9178';
+                    } else {
+                        result = 'エラー: 代入できません';
+                        resultColor = '#f44336';
+                    }
+                } else {
+                    result = 'エラー: 不明なコマンド';
+                    resultColor = '#f44336';
+                }
+            } catch (e) {
+                result = 'エラー: ' + e.message;
+                resultColor = '#f44336';
+            }
+            
+            // 結果を表示
+            const resultLine = document.createElement('div');
+            resultLine.innerHTML = `<span style="color: ${resultColor};">${result}</span>`;
+            history.appendChild(resultLine);
+            
+            // 入力をクリア
+            input.value = '';
+            
+            // スクロール
+            history.scrollTop = history.scrollHeight;
+        }
+        
+        // プロジェクト構造表示
+        function showProjectStructure() {
+            const tree = document.getElementById('projectTree');
+            tree.innerHTML = `
+                <div style="margin-left: 1rem;">
+                    <div style="cursor: pointer;" onclick="toggleFolder(this)">
+                        ▼ 📁 ECサイト.Frontend (Webアプリケーション)
+                        <div style="margin-left: 1.5rem; font-size: 0.9rem;">
+                            <div>📄 index.html</div>
+                            <div>📁 css/</div>
+                            <div>📁 js/</div>
+                            <div>📁 images/</div>
+                        </div>
+                    </div>
+                    <div style="cursor: pointer; margin-top: 0.5rem;" onclick="toggleFolder(this)">
+                        ▼ 📁 ECサイト.API (Web API)
+                        <div style="margin-left: 1.5rem; font-size: 0.9rem;">
+                            <div>📄 ProductController.cs</div>
+                            <div>📄 OrderController.cs</div>
+                            <div>📄 UserController.cs</div>
+                        </div>
+                    </div>
+                    <div style="cursor: pointer; margin-top: 0.5rem;" onclick="toggleFolder(this)">
+                        ▼ 📁 ECサイト.Core (ビジネスロジック)
+                        <div style="margin-left: 1.5rem; font-size: 0.9rem;">
+                            <div>📄 Product.cs</div>
+                            <div>📄 Order.cs</div>
+                            <div>📄 ShoppingCart.cs</div>
+                        </div>
+                    </div>
+                    <div style="cursor: pointer; margin-top: 0.5rem;" onclick="toggleFolder(this)">
+                        ▼ 📁 ECサイト.Data (データアクセス)
+                        <div style="margin-left: 1.5rem; font-size: 0.9rem;">
+                            <div>📄 DbContext.cs</div>
+                            <div>📄 ProductRepository.cs</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function toggleFolder(element) {
+            const content = element.querySelector('div');
+            if (content) {
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                element.innerHTML = element.innerHTML.replace('▼', '▶');
+                if (content.style.display === 'block') {
+                    element.innerHTML = element.innerHTML.replace('▶', '▼');
+                }
+            }
+        }
+        
+        // ビルドデモ
+        function startBuildDemo() {
+            document.getElementById('buildProgress').style.display = 'block';
+            const output = document.getElementById('buildOutput');
+            const progressBar = document.getElementById('buildProgressBar');
+            const percentage = document.getElementById('buildPercentage');
+            
+            output.innerHTML = '';
+            progressBar.style.width = '0%';
+            
+            const buildSteps = [
+                { progress: 10, message: '========== ビルド開始: プロジェクト: MyApp ==========', type: 'info' },
+                { progress: 20, message: 'ソースファイルを解析中...', type: 'info' },
+                { progress: 30, message: 'Program.cs をコンパイル中...', type: 'info' },
+                { progress: 40, message: 'MainForm.cs をコンパイル中...', type: 'info' },
+                { progress: 50, message: '警告 CS0219: 変数 \'unusedVariable\' は割り当てられていますが、使用されていません', type: 'warning' },
+                { progress: 60, message: 'DatabaseHelper.cs をコンパイル中...', type: 'info' },
+                { progress: 70, message: 'リソースファイルを処理中...', type: 'info' },
+                { progress: 80, message: 'アセンブリをリンク中...', type: 'info' },
+                { progress: 90, message: '最適化を実行中...', type: 'info' },
+                { progress: 100, message: '========== ビルド完了: 成功 1、失敗 0、警告 1 ==========', type: 'success' }
+            ];
+            
+            let currentStep = 0;
+            const buildInterval = setInterval(() => {
+                if (currentStep < buildSteps.length) {
+                    const step = buildSteps[currentStep];
+                    progressBar.style.width = step.progress + '%';
+                    percentage.textContent = step.progress + '%';
+                    
+                    const color = step.type === 'warning' ? '#ff9800' : 
+                                 step.type === 'success' ? '#4caf50' : '#4ec9b0';
+                    
+                    output.innerHTML += `<div style="color: ${color};">${step.message}</div>`;
+                    output.scrollTop = output.scrollHeight;
+                    
+                    currentStep++;
+                } else {
+                    clearInterval(buildInterval);
+                    output.innerHTML += '\n<div style="color: #569cd6;">出力: bin\\Release\\MyApp.exe</div>';
+                }
+            }, 800);
+        }
+        
+        // オブジェクト作成デモ
+        function createPersonObject() {
+            const name = document.getElementById('personName').value;
+            const age = document.getElementById('personAge').value;
+            const job = document.getElementById('personJob').value;
+            
+            if (!name || !age || !job) {
+                alert('すべての項目を入力してください');
+                return;
+            }
+            
+            const result = document.getElementById('objectResult');
+            result.style.display = 'block';
+            result.innerHTML = `
+                <h4>作成されたオブジェクト：</h4>
+                <div class="code-block">
+<span class="code-keyword">const</span> person = {
+    name: <span class="code-string">"${name}"</span>,
+    age: <span class="code-number">${age}</span>,
+    job: <span class="code-string">"${job}"</span>,
+    
+    introduce() {
+        <span class="code-keyword">return</span> <span class="code-string">"私は${name}です。"</span>;
+    }
+};
+
+<span class="code-comment">// メソッドを呼び出す</span>
+person.introduce();
+<span class="code-comment">// 結果: "私は${name}です。"</span>
+                </div>
+            `;
+        }
+        
+        // リファクタリングデモ
+        function startRefactorDemo() {
+            document.getElementById('refactorExample').style.display = 'block';
+        }
+        
+        function showRefactoredCode() {
+            const refactoredDiv = document.getElementById('refactoredCode');
+            refactoredDiv.style.display = 'block';
+            refactoredDiv.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong>リファクタリング後：</strong>
+                </div>
+                <div class="code-block">
+<span class="code-comment">// 価格計算（改善されたコード）</span>
+<span class="code-keyword">function</span> calculatePrice(unitPrice, quantity, customerType) {
+    <span class="code-keyword">let</span> totalPrice = unitPrice * quantity;
+    
+    <span class="code-comment">// 数量割引</span>
+    <span class="code-keyword">const</span> BULK_DISCOUNT_THRESHOLD = <span class="code-number">10</span>;
+    <span class="code-keyword">const</span> BULK_DISCOUNT_RATE = <span class="code-number">0.1</span>;
+    
+    <span class="code-keyword">if</span> (quantity > BULK_DISCOUNT_THRESHOLD) {
+        totalPrice = applyDiscount(totalPrice, BULK_DISCOUNT_RATE);
+    }
+    
+    <span class="code-comment">// 会員割引</span>
+    <span class="code-keyword">if</span> (customerType === <span class="code-string">"member"</span>) {
+        <span class="code-keyword">const</span> MEMBER_DISCOUNT_RATE = <span class="code-number">0.05</span>;
+        totalPrice = applyDiscount(totalPrice, MEMBER_DISCOUNT_RATE);
+    }
+    
+    <span class="code-keyword">return</span> totalPrice;
+}
+
+<span class="code-keyword">function</span> applyDiscount(price, discountRate) {
+    <span class="code-keyword">return</span> price * (<span class="code-number">1</span> - discountRate);
+}
+                </div>
+                <div class="hint-box" style="margin-top: 1rem;">
+                    <span class="hint-icon">💡</span>
+                    <div>
+                        <strong>改善点：</strong>
+                        <ul style="margin: 0.5rem 0;">
+                            <li>変数名を意味のある名前に変更</li>
+                            <li>マジックナンバーを定数として定義</li>
+                            <li>割引計算を別メソッドに抽出</li>
+                            <li>コメントで意図を明確化</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // デプロイデモ
+        function startDeployDemo() {
+            document.getElementById('deployFlow').style.display = 'block';
+            const stepsDiv = document.getElementById('deploySteps');
+            
+            const steps = [
+                { 
+                    icon: '🔨', 
+                    title: 'ビルド', 
+                    status: 'processing',
+                    description: 'リリースビルドを作成中...'
+                },
+                { 
+                    icon: '🧪', 
+                    title: 'テスト', 
+                    status: 'waiting',
+                    description: '自動テストを実行'
+                },
+                { 
+                    icon: '📦', 
+                    title: 'パッケージング', 
+                    status: 'waiting',
+                    description: 'デプロイ用パッケージを作成'
+                },
+                { 
+                    icon: '🚀', 
+                    title: 'デプロイ', 
+                    status: 'waiting',
+                    description: '本番サーバーに配置'
+                },
+                { 
+                    icon: '✅', 
+                    title: '検証', 
+                    status: 'waiting',
+                    description: '動作確認とヘルスチェック'
+                }
+            ];
+            
+            stepsDiv.innerHTML = steps.map((step, index) => `
+                <div id="deployStep${index}" style="display: flex; align-items: center; 
+                                                    padding: 1rem; margin-bottom: 0.5rem; 
+                                                    background: #f8f9fa; border-radius: 8px;
+                                                    opacity: ${step.status === 'waiting' ? '0.5' : '1'};">
+                    <div style="font-size: 2rem; margin-right: 1rem;">${step.icon}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold;">${step.title}</div>
+                        <div style="color: #666; font-size: 0.9rem;">${step.description}</div>
+                    </div>
+                    <div id="deployStatus${index}" style="margin-left: 1rem;">
+                        ${step.status === 'processing' ? '⏳ 実行中...' : '⏸️ 待機中'}
+                    </div>
+                </div>
+            `).join('');
+            
+            // 順番に実行
+            let currentStep = 0;
+            const deployInterval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    // 現在のステップを完了
+                    if (currentStep > 0) {
+                        const prevStep = document.getElementById(`deployStep${currentStep - 1}`);
+                        const prevStatus = document.getElementById(`deployStatus${currentStep - 1}`);
+                        prevStep.style.background = '#E8F5E9';
+                        prevStatus.innerHTML = '✅ 完了';
+                    }
+                    
+                    // 次のステップを開始
+                    if (currentStep < steps.length) {
+                        const nextStep = document.getElementById(`deployStep${currentStep}`);
+                        const nextStatus = document.getElementById(`deployStatus${currentStep}`);
+                        nextStep.style.opacity = '1';
+                        nextStep.style.background = '#FFF3E0';
+                        nextStatus.innerHTML = '⏳ 実行中...';
+                    }
+                    
+                    currentStep++;
+                } else {
+                    // 最後のステップを完了
+                    const lastStep = document.getElementById(`deployStep${steps.length - 1}`);
+                    const lastStatus = document.getElementById(`deployStatus${steps.length - 1}`);
+                    lastStep.style.background = '#E8F5E9';
+                    lastStatus.innerHTML = '✅ 完了';
+                    
+                    clearInterval(deployInterval);
+                    
+                    // 完了メッセージ
+                    stepsDiv.innerHTML += `
+                        <div class="hint-box" style="margin-top: 1rem;">
+                            <span class="hint-icon">🎉</span>
+                            <div>
+                                <strong>デプロイが完了しました！</strong>
+                                <p>アプリケーションは正常に本番環境にデプロイされ、ユーザーがアクセスできる状態になりました。</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }, 2000);
+        }
+        
+        // ツールチップ位置調整機能（改良版）
+        function adjustTooltipPosition() {
+            const tooltips = document.querySelectorAll('.tooltip');
+            const miniTooltips = document.querySelectorAll('.mini-tooltip');
+            
+            // 通常のツールチップ
+            tooltips.forEach(tooltip => {
+                const tooltipText = tooltip.querySelector('.tooltiptext');
+                if (!tooltipText) return;
+
+                tooltip.addEventListener('mouseenter', () => {
+                    // まず一時的に表示して実際のサイズを取得
+                    tooltipText.style.visibility = 'visible';
+                    tooltipText.style.opacity = '0';
+                    tooltipText.style.left = '0px';
+                    tooltipText.style.top = '0px';
+                    tooltipText.style.transform = 'none';
+                    
+                    // 次のフレームで位置計算
+                    requestAnimationFrame(() => {
+                        const triggerRect = tooltip.getBoundingClientRect();
+                        const tooltipRect = tooltipText.getBoundingClientRect();
+                        const viewportWidth = window.innerWidth;
+                        const viewportHeight = window.innerHeight;
+                        
+                        // 実際のツールチップサイズを取得
+                        const tooltipWidth = tooltipRect.width;
+                        const tooltipHeight = tooltipRect.height;
+                        
+                        // 基本位置（trigger要素の上中央）
+                        let left = triggerRect.left + (triggerRect.width / 2) - (tooltipWidth / 2);
+                        let top = triggerRect.top - tooltipHeight - 10;
+                        
+                        // 左端チェック
+                        if (left < 20) {
+                            left = 20;
+                        }
+                        // 右端チェック
+                        if (left + tooltipWidth > viewportWidth - 20) {
+                            left = viewportWidth - tooltipWidth - 20;
+                        }
+                        // 上端チェック（下に表示）
+                        if (top < 20) {
+                            top = triggerRect.bottom + 10;
+                        }
+                        // 下端チェック（上に戻す）
+                        if (top + tooltipHeight > viewportHeight - 20) {
+                            top = triggerRect.top - tooltipHeight - 10;
+                        }
+                        
+                        // 最終位置を設定
+                        tooltipText.style.left = Math.max(20, left) + 'px';
+                        tooltipText.style.top = Math.max(20, top) + 'px';
+                        tooltipText.style.opacity = '1';
+                    });
+                });
+
+                tooltip.addEventListener('mouseleave', () => {
+                    tooltipText.style.visibility = 'hidden';
+                    tooltipText.style.opacity = '0';
+                });
+            });
+
+            // ミニツールチップ
+            miniTooltips.forEach(miniTooltip => {
+                miniTooltip.addEventListener('mouseenter', () => {
+                    const triggerRect = miniTooltip.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    
+                    // ミニツールチップのサイズを推定（通常は短いテキスト）
+                    const tipText = miniTooltip.getAttribute('data-tip') || '';
+                    const estimatedWidth = Math.min(tipText.length * 8 + 20, 300);
+                    const estimatedHeight = 40;
+                    
+                    // 基本位置
+                    let left = triggerRect.left + (triggerRect.width / 2) - (estimatedWidth / 2);
+                    let top = triggerRect.top - estimatedHeight - 5;
+                    
+                    // 左端チェック
+                    if (left < 20) {
+                        left = 20;
+                    }
+                    // 右端チェック
+                    if (left + estimatedWidth > viewportWidth - 20) {
+                        left = viewportWidth - estimatedWidth - 20;
+                    }
+                    // 上端チェック（下に表示）
+                    if (top < 20) {
+                        top = triggerRect.bottom + 5;
+                    }
+                    
+                    // CSSカスタムプロパティで位置を設定
+                    miniTooltip.style.setProperty('--tooltip-left', left + 'px');
+                    miniTooltip.style.setProperty('--tooltip-top', top + 'px');
+                });
+            });
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            // ツールチップ位置調整を初期化
+            adjustTooltipPosition();
+            
+            // 初期タブをアクティブに
+            const firstTab = document.querySelector('.tab-button.active');
+            if (firstTab) {
+                const tabId = firstTab.textContent.includes('IDEとは') ? 'overview' : null;
+                if (tabId) {
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                }
+            }
+        });
+
+        // ウィンドウサイズ変更時にも再調整
+        window.addEventListener('resize', adjustTooltipPosition);
+    </script>
+</body>
+</html>

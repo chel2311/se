@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SE基礎学習ポータル</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #004590;
+            --accent-color: #FF961C;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --card-hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', 'Hiragino Kaku Gothic Pro', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: clamp(20px, 3vh, 40px) 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: min(1200px, 95vw);
+            margin: 0 auto;
+            padding: 0 clamp(10px, 2vw, 20px);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: clamp(14px, 2vw, 18px);
+            opacity: 0.9;
+        }
+
+        main {
+            flex: 1;
+            max-width: min(1200px, 95vw);
+            margin: 0 auto;
+            padding: clamp(20px, 3vw, 40px) clamp(10px, 2vw, 20px);
+            width: 100%;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+            gap: clamp(20px, 3vw, 30px);
+            margin-top: clamp(20px, 3vw, 40px);
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: clamp(15px, 2vw, 20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+        }
+
+        .card-header h2 {
+            font-size: clamp(18px, 2.5vw, 24px);
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-version {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-body {
+            padding: clamp(15px, 2vw, 20px);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-description {
+            color: #666;
+            font-size: clamp(14px, 1.5vw, 16px);
+            margin-bottom: clamp(15px, 2vw, 20px);
+            flex: 1;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: clamp(15px, 2vw, 20px);
+        }
+
+        .feature-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 8px;
+            font-size: clamp(13px, 1.4vw, 15px);
+            color: #555;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .card-link {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            padding: clamp(10px, 1.5vw, 12px) clamp(20px, 3vw, 30px);
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: clamp(14px, 1.5vw, 16px);
+        }
+
+        .card-link:hover {
+            background: #e67e00;
+            transform: translateX(5px);
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .beginner {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .intermediate {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .advanced {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        footer {
+            background: var(--primary-dark);
+            color: white;
+            text-align: center;
+            padding: clamp(15px, 2vh, 20px);
+            margin-top: auto;
+        }
+
+        footer p {
+            font-size: clamp(12px, 1.5vw, 14px);
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .course-card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .course-card:nth-child(1) { animation-delay: 0.1s; }
+        .course-card:nth-child(2) { animation-delay: 0.2s; }
+        .course-card:nth-child(3) { animation-delay: 0.3s; }
+        .course-card:nth-child(4) { animation-delay: 0.4s; }
+        .course-card:nth-child(5) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>SE基礎学習ポータル</h1>
+            <p>システムエンジニアのための基礎知識学習プラットフォーム</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="course-grid">
+            <!-- DBMS基本概念学習ツール -->
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>DBMS基本概念学習ツール</h2>
+                    <span class="card-version">タブ形式</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge beginner">基礎</span>
+                    <p class="card-description">
+                        データベース管理システム（DBMS）の基本概念から実践的なSQL操作まで、段階的に学習できる包括的な学習ツールです。
+                    </p>
+                    <ul class="feature-list">
+                        <li>DBMS基本概念の解説</li>
+                        <li>データベース構造の理解</li>
+                        <li>SQL文の実践的な学習</li>
+                        <li>インタラクティブな操作体験</li>
+                        <li>トランザクション処理の学習</li>
+                        <li>ストアドプロシージャの基礎</li>
+                    </ul>
+                    <a href="dbms-tabbed-interface.html" class="card-link">
+                        学習を開始する →
+                    </a>
+                </div>
+            </div>
+
+            <!-- IDE完全解説ガイド -->
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>IDE完全解説ガイド</h2>
+                    <span class="card-version">インタラクティブ版</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge intermediate">中級</span>
+                    <p class="card-description">
+                        統合開発環境（IDE）の機能と用語を実例と体験を通じて完全理解。コード編集からデバッグ、ビルドまで開発の全工程を学習できます。
+                    </p>
+                    <ul class="feature-list">
+                        <li>IDE基本機能の完全解説</li>
+                        <li>デバッグ技術の習得</li>
+                        <li>プロジェクト管理の理解</li>
+                        <li>ビルド・デプロイプロセス</li>
+                        <li>インタラクティブな学習体験</li>
+                        <li>実践的な開発スキル向上</li>
+                    </ul>
+                    <a href="ide-simulator.html" class="card-link">
+                        学習を開始する →
+                    </a>
+                </div>
+            </div>
+
+            <!-- IDE統合開発環境シミュレーター -->
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>IDE統合開発環境シミュレーター</h2>
+                    <span class="card-version">実践学習版</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge advanced">上級</span>
+                    <p class="card-description">
+                        実際のIDEを模擬した環境でプログラミングの実践的な開発体験を提供します。
+                    </p>
+                    <ul class="feature-list">
+                        <li>リアルなIDE環境シミュレーション</li>
+                        <li>プロジェクト管理の実践</li>
+                        <li>デバッグ・テスト環境</li>
+                        <li>コードエディタ機能</li>
+                        <li>ビルド・実行プロセス</li>
+                        <li>実践的な開発フロー体験</li>
+                    </ul>
+                    <a href="ide-simulator2.html" class="card-link">
+                        学習を開始する →
+                    </a>
+                </div>
+            </div>
+
+            <!-- DBMS基本概念学習ツール（単体版） -->
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>DBMS学習ツール</h2>
+                    <span class="card-version">単体版</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge beginner">基礎</span>
+                    <p class="card-description">
+                        データベース管理システムの基礎概念を学習できる単体版学習ツールです。
+                    </p>
+                    <ul class="feature-list">
+                        <li>DBMS基本概念</li>
+                        <li>データベース構造</li>
+                        <li>SQL操作の基礎</li>
+                        <li>シンプルなインターフェース</li>
+                    </ul>
+                    <a href="dbms-learning-tool.html" class="card-link">
+                        学習を開始する →
+                    </a>
+                </div>
+            </div>
+
+            <!-- VB6.0 コード追跡ガイド -->
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>VB6.0 コード追跡ガイド</h2>
+                    <span class="card-version">実践版</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge intermediate">中級</span>
+                    <p class="card-description">
+                        Visual Basic 6.0でのコード追跡とデバッグ効率化のための実践的ガイドです。
+                    </p>
+                    <ul class="feature-list">
+                        <li>効率的なコード追跡手法</li>
+                        <li>デバッグ技術の向上</li>
+                        <li>VB6.0特有のテクニック</li>
+                        <li>実践的なソリューション</li>
+                    </ul>
+                    <a href="vb6-code-navigation-guide.html" class="card-link">
+                        学習を開始する →
+                    </a>
+                </div>
+            </div>
+
+            <!-- VBAイミディエイトウィンドウガイド -->
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>VBAイミディエイトウィンドウガイド</h2>
+                    <span class="card-version">図解版</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge beginner">基礎</span>
+                    <p class="card-description">
+                        VBAのイミディエイトウィンドウの使い方を図解で分かりやすく解説します。
+                    </p>
+                    <ul class="feature-list">
+                        <li>イミディエイトウィンドウの基本</li>
+                        <li>デバッグ技術の習得</li>
+                        <li>実践的な使用例</li>
+                        <li>初心者向け図解解説</li>
+                    </ul>
+                    <a href="vba-immediate-window-guide.html" class="card-link">
+                        学習を開始する →
+                    </a>
+                </div>
+            </div>
+
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>システム設計基礎</h2>
+                    <span class="card-version">準備中</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge intermediate">中級</span>
+                    <p class="card-description">
+                        要件定義からシステム設計まで、SEに必要な設計スキルを体系的に学習します。
+                    </p>
+                    <ul class="feature-list">
+                        <li>要件定義手法</li>
+                        <li>システム設計パターン</li>
+                        <li>UMLによるモデリング</li>
+                        <li>アーキテクチャ設計</li>
+                    </ul>
+                    <a href="#" class="card-link" style="background: #ccc; cursor: not-allowed;">
+                        準備中
+                    </a>
+                </div>
+            </div>
+
+            <div class="course-card">
+                <div class="card-header">
+                    <h2>プロジェクト管理</h2>
+                    <span class="card-version">準備中</span>
+                </div>
+                <div class="card-body">
+                    <span class="difficulty-badge advanced">上級</span>
+                    <p class="card-description">
+                        プロジェクトマネジメントの基本から実践まで、PMとしてのスキルを習得します。
+                    </p>
+                    <ul class="feature-list">
+                        <li>プロジェクト計画立案</li>
+                        <li>リスク管理</li>
+                        <li>品質管理</li>
+                        <li>チームマネジメント</li>
+                    </ul>
+                    <a href="#" class="card-link" style="background: #ccc; cursor: not-allowed;">
+                        準備中
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 SE基礎学習ポータル. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // ページ読み込み時のアニメーション
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.course-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, index * 100);
+            });
+        });
+
+        // ウィンドウサイズに応じた調整
+        function adjustScale() {
+            const viewportWidth = window.innerWidth;
+            
+            if (viewportWidth < 768) {
+                document.documentElement.style.fontSize = '14px';
+            } else if (viewportWidth < 992) {
+                document.documentElement.style.fontSize = '15px';
+            } else {
+                document.documentElement.style.fontSize = '16px';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', adjustScale);
+        window.addEventListener('resize', adjustScale);
+    </script>
+</body>
+</html>

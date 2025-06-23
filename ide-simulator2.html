@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE統合開発環境シミュレーター - 実践学習版</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #003d75;
+            --accent-color: #FF961C;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+            --info-color: #2196f3;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --code-bg: #1e1e1e;
+            --code-color: #d4d4d4;
+            --ide-bg: #252526;
+            --ide-sidebar: #2d2d30;
+            --ide-activity: #333333;
+            --ide-statusbar: #007acc;
+            --transition-fast: 0.2s;
+            --transition-normal: 0.3s;
+            --transition-slow: 0.5s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', 'Consolas', 'Monaco', monospace;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            overflow-x: hidden;
+        }
+
+        /* IDE風レイアウト */
+        .ide-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--ide-bg);
+        }
+
+        /* IDEヘッダー（メニューバー） */
+        .ide-header {
+            background: var(--ide-sidebar);
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            border-bottom: 1px solid #000;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .ide-menu {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .ide-menu-item {
+            padding: 0 0.5rem;
+            cursor: pointer;
+            transition: background var(--transition-fast) ease;
+        }
+
+        .ide-menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* IDEメインコンテンツ */
+        .ide-main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* アクティビティバー */
+        .ide-activity-bar {
+            width: 50px;
+            background: var(--ide-activity);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem 0;
+            gap: 0.5rem;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #858585;
+            transition: all var(--transition-fast) ease;
+            border-left: 2px solid transparent;
+            position: relative;
+        }
+
+        .activity-icon:hover {
+            color: #fff;
+        }
+
+        .activity-icon.active {
+            color: #fff;
+            border-left-color: var(--accent-color);
+        }
+
+        .activity-tooltip {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--ide-sidebar);
+            color: #fff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-fast) ease;
+            font-size: 0.85rem;
+            z-index: 1000;
+        }
+
+        .activity-icon:hover .activity-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* サイドバー */
+        .ide-sidebar {
+            width: 300px;
+            background: var(--ide-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #000;
+            transition: width var(--transition-normal) ease;
+        }
+
+        .ide-sidebar.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #ccc;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        /* エディターエリア */
+        .ide-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--code-bg);
+        }
+
+        /* タブバー */
+        .editor-tabs {
+            background: var(--ide-sidebar);
+            display: flex;
+            border-bottom: 1px solid #000;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #555 var(--ide-sidebar);
+        }
+
+        .editor-tab {
+            padding: 0.5rem 1rem;
+            color: #969696;
+            cursor: pointer;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            transition: all var(--transition-fast) ease;
+            position: relative;
+        }
+
+        .editor-tab:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .editor-tab.active {
+            background: var(--code-bg);
+            color: #fff;
+        }
+
+        .editor-tab .close-btn {
+            margin-left: 0.5rem;
+            opacity: 0;
+            transition: opacity var(--transition-fast) ease;
+        }
+
+        .editor-tab:hover .close-btn {
+            opacity: 0.7;
+        }
+
+        .editor-tab .close-btn:hover {
+            opacity: 1;
+        }
+
+        /* エディターコンテンツ */
+        .editor-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            color: var(--code-color);
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        /* コード表示エリア */
+        .code-editor {
+            display: flex;
+            background: var(--code-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .line-numbers {
+            background: var(--ide-sidebar);
+            padding: 1rem 0.5rem;
+            text-align: right;
+            color: #858585;
+            user-select: none;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .code-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .code-line {
+            display: flex;
+            min-height: 1.5rem;
+            position: relative;
+            transition: background var(--transition-fast) ease;
+        }
+
+        .code-line:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .code-line.breakpoint::before {
+            content: '●';
+            position: absolute;
+            left: -25px;
+            color: var(--error-color);
+            animation: pulse 2s infinite;
+        }
+
+        .code-line.current {
+            background: rgba(255,150,28,0.2);
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .code-line.error {
+            background: rgba(244,67,54,0.1);
+            text-decoration: underline wavy var(--error-color);
+        }
+
+        /* ターミナル/出力エリア */
+        .ide-terminal {
+            height: 200px;
+            background: var(--code-bg);
+            border-top: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            transition: height var(--transition-normal) ease;
+        }
+
+        .terminal-tabs {
+            background: var(--ide-sidebar);
+            display: flex;
+            padding: 0 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .terminal-tab {
+            padding: 0.5rem 1rem;
+            color: #969696;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all var(--transition-fast) ease;
+        }
+
+        .terminal-tab.active {
+            color: #fff;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: #0f0;
+            background: #000;
+        }
+
+        /* ステータスバー */
+        .ide-statusbar {
+            height: 25px;
+            background: var(--ide-statusbar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* チュートリアルカード */
+        .tutorial-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            color: var(--text-color);
+        }
+
+        .tutorial-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-step {
+            background: var(--accent-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .tutorial-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .tutorial-content {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .tutorial-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all var(--transition-fast) ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,91,171,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* インテリセンス（自動補完） */
+        .intellisense {
+            position: absolute;
+            background: var(--ide-sidebar);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 0.5rem 0;
+            min-width: 200px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .intellisense-item {
+            padding: 0.3rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #ccc;
+            transition: background var(--transition-fast) ease;
+        }
+
+        .intellisense-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .intellisense-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 2px;
+        }
+
+        /* エラーリスト */
+        .error-list {
+            background: var(--ide-sidebar);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .error-item {
+            display: flex;
+            align-items: start;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background var(--transition-fast) ease;
+        }
+
+        .error-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .error-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .error-icon.error {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .error-icon.warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .error-details {
+            flex: 1;
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+
+        .error-file {
+            color: #858585;
+            font-size: 0.8rem;
+        }
+
+        /* ブレッドクラム */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--ide-sidebar);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            transition: color var(--transition-fast) ease;
+        }
+
+        .breadcrumb-item:hover {
+            color: #fff;
+        }
+
+        .breadcrumb-separator {
+            color: #555;
+        }
+
+        /* プロパティパネル */
+        .properties-panel {
+            background: var(--ide-sidebar);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        .property-group {
+            margin-bottom: 1rem;
+        }
+
+        .property-group-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .property-group-header:hover {
+            color: #fff;
+        }
+
+        .property-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.85rem;
+            color: #969696;
+            transition: background var(--transition-fast) ease;
+        }
+
+        .property-row:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .property-name {
+            color: #9cdcfe;
+        }
+
+        .property-value {
+            color: #ce9178;
+        }
+
+        /* デバッグコントロール */
+        .debug-controls {
+            background: var(--ide-sidebar);
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .debug-button {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            transition: all var(--transition-fast) ease;
+        }
+
+        .debug-button:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .debug-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 変数ウォッチャー */
+        .watch-panel {
+            background: var(--ide-sidebar);
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .watch-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.85rem;
+            color: #ccc;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .watch-name {
+            color: #9cdcfe;
+        }
+
+        .watch-value {
+            color: #b5cea8;
+        }
+
+        .watch-type {
+            color: #858585;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        /* ツールチップ */
+        .tooltip {
+            position: absolute;
+            background: var(--ide-sidebar);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        /* アニメーション */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        @keyframes slide-in {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: #fff;
+            animation: blink 1s infinite;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .ide-sidebar {
+                position: absolute;
+                z-index: 100;
+                height: 100%;
+            }
+
+            .ide-activity-bar {
+                width: 40px;
+            }
+
+            .activity-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1.2rem;
+            }
+
+            .ide-terminal {
+                height: 150px;
+            }
+        }
+
+        /* ローディングアニメーション */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* スクロールバーカスタマイズ */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--ide-sidebar);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        /* フォーカス状態 */
+        *:focus {
+            outline: 1px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        /* プリローダー */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--ide-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .preloader-content {
+            text-align: center;
+            color: #ccc;
+        }
+
+        .preloader-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- プリローダー -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-content">
+            <div class="preloader-logo">🖥️</div>
+            <div class="loading"></div>
+            <p style="margin-top: 1rem;">IDE環境を初期化中...</p>
+        </div>
+    </div>
+
+    <!-- IDE風インターフェース -->
+    <div class="ide-container" id="ide-container" style="display: none;">
+        <!-- メニューバー -->
+        <div class="ide-header">
+            <div class="ide-menu">
+                <div class="ide-menu-item">
+                    <a href="index.html" style="color: #ccc; text-decoration: none;">← ポータル</a>
+                </div>
+                <div class="ide-menu-item">ファイル</div>
+                <div class="ide-menu-item">編集</div>
+                <div class="ide-menu-item">表示</div>
+                <div class="ide-menu-item">実行</div>
+                <div class="ide-menu-item">デバッグ</div>
+                <div class="ide-menu-item">ツール</div>
+                <div class="ide-menu-item">ヘルプ</div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="ide-main">
+            <!-- アクティビティバー -->
+            <div class="ide-activity-bar">
+                <div class="activity-icon active" data-panel="explorer">
+                    📁
+                    <span class="activity-tooltip">エクスプローラー</span>
+                </div>
+                <div class="activity-icon" data-panel="search">
+                    🔍
+                    <span class="activity-tooltip">検索</span>
+                </div>
+                <div class="activity-icon" data-panel="git">
+                    🌿
+                    <span class="activity-tooltip">ソース管理</span>
+                </div>
+                <div class="activity-icon" data-panel="debug">
+                    🐛
+                    <span class="activity-tooltip">デバッグ</span>
+                </div>
+                <div class="activity-icon" data-panel="extensions">
+                    🧩
+                    <span class="activity-tooltip">拡張機能</span>
+                </div>
+                <div class="activity-icon" data-panel="tutorial">
+                    📚
+                    <span class="activity-tooltip">チュートリアル</span>
+                </div>
+            </div>
+
+            <!-- サイドバー -->
+            <div class="ide-sidebar" id="sidebar">
+                <!-- エクスプローラーパネル -->
+                <div class="sidebar-panel" id="explorer-panel">
+                    <div class="sidebar-header">エクスプローラー</div>
+                    <div class="sidebar-content">
+                        <div class="tutorial-card">
+                            <div class="tutorial-header">
+                                <div class="tutorial-step">1</div>
+                                <div class="tutorial-title">プロジェクト構造を理解しよう</div>
+                            </div>
+                            <div class="tutorial-content">
+                                <p>エクスプローラーは、プロジェクト内のファイルやフォルダを階層的に表示します。</p>
+                                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                    <li>📁 フォルダをクリックして展開/折りたたみ</li>
+                                    <li>📄 ファイルをクリックして編集</li>
+                                    <li>右クリックでコンテキストメニュー表示</li>
+                                </ul>
+                            </div>
+                            <div class="tutorial-actions">
+                                <button class="btn" onclick="createSampleProject()">サンプルプロジェクトを作成</button>
+                            </div>
+                        </div>
+                        <div id="file-tree" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- 検索パネル -->
+                <div class="sidebar-panel" id="search-panel" style="display: none;">
+                    <div class="sidebar-header">検索</div>
+                    <div class="sidebar-content">
+                        <div class="tutorial-card">
+                            <div class="tutorial-header">
+                                <div class="tutorial-step">2</div>
+                                <div class="tutorial-title">コード内を検索しよう</div>
+                            </div>
+                            <div class="tutorial-content">
+                                <p>プロジェクト全体から特定のテキストや正規表現パターンを検索できます。</p>
+                                <input type="text" placeholder="検索..." style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                                <div style="margin-top: 0.5rem;">
+                                    <label style="color: #ccc; font-size: 0.85rem;">
+                                        <input type="checkbox"> 大文字小文字を区別
+                                    </label>
+                                </div>
+                                <div>
+                                    <label style="color: #ccc; font-size: 0.85rem;">
+                                        <input type="checkbox"> 正規表現を使用
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="tutorial-actions">
+                                <button class="btn" onclick="performSearch()">検索実行</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- デバッグパネル -->
+                <div class="sidebar-panel" id="debug-panel" style="display: none;">
+                    <div class="sidebar-header">デバッグ</div>
+                    <div class="sidebar-content">
+                        <div class="tutorial-card">
+                            <div class="tutorial-header">
+                                <div class="tutorial-step">3</div>
+                                <div class="tutorial-title">デバッグの基本を学ぼう</div>
+                            </div>
+                            <div class="tutorial-content">
+                                <p><strong>デバッグ</strong>は、プログラムのバグ（エラー）を見つけて修正するプロセスです。</p>
+                                <h4 style="margin-top: 1rem; color: var(--primary-color);">主要な機能：</h4>
+                                <dl style="margin-top: 0.5rem;">
+                                    <dt style="font-weight: bold; color: var(--accent-color);">🔴 ブレークポイント</dt>
+                                    <dd style="margin-left: 1.5rem; margin-bottom: 0.5rem;">コードの実行を一時停止する場所</dd>
+                                    
+                                    <dt style="font-weight: bold; color: var(--accent-color);">⬇️ ステップイン (F11)</dt>
+                                    <dd style="margin-left: 1.5rem; margin-bottom: 0.5rem;">関数の内部に入って詳細を確認</dd>
+                                    
+                                    <dt style="font-weight: bold; color: var(--accent-color);">⏭️ ステップオーバー (F10)</dt>
+                                    <dd style="margin-left: 1.5rem; margin-bottom: 0.5rem;">現在の行を実行して次へ進む</dd>
+                                    
+                                    <dt style="font-weight: bold; color: var(--accent-color);">👁️ ウォッチ</dt>
+                                    <dd style="margin-left: 1.5rem;">変数の値をリアルタイムで監視</dd>
+                                </dl>
+                            </div>
+                            <div class="tutorial-actions">
+                                <button class="btn" onclick="startDebugSession()">デバッグを開始</button>
+                            </div>
+                        </div>
+
+                        <!-- 変数ウォッチャー -->
+                        <div class="watch-panel" style="margin-top: 1rem;">
+                            <h4 style="color: #ccc; font-size: 0.9rem; margin-bottom: 0.5rem;">変数</h4>
+                            <div id="watch-list">
+                                <div class="watch-item">
+                                    <span class="watch-name">items</span>
+                                    <span>
+                                        <span class="watch-value">[Array(5)]</span>
+                                        <span class="watch-type"> array</span>
+                                    </span>
+                                </div>
+                                <div class="watch-item">
+                                    <span class="watch-name">total</span>
+                                    <span>
+                                        <span class="watch-value">0</span>
+                                        <span class="watch-type"> number</span>
+                                    </span>
+                                </div>
+                                <div class="watch-item">
+                                    <span class="watch-name">index</span>
+                                    <span>
+                                        <span class="watch-value">undefined</span>
+                                        <span class="watch-type"> undefined</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 拡張機能パネル -->
+                <div class="sidebar-panel" id="extensions-panel" style="display: none;">
+                    <div class="sidebar-header">拡張機能</div>
+                    <div class="sidebar-content">
+                        <div class="tutorial-card">
+                            <div class="tutorial-header">
+                                <div class="tutorial-step">4</div>
+                                <div class="tutorial-title">アドインで機能を拡張しよう</div>
+                            </div>
+                            <div class="tutorial-content">
+                                <p><strong>アドイン（拡張機能）</strong>は、IDEに新しい機能を追加するプラグインです。</p>
+                                <p style="margin-top: 0.5rem;">例：</p>
+                                <ul style="margin-left: 1.5rem;">
+                                    <li>🎨 コードフォーマッター</li>
+                                    <li>🔍 高度な検索機能</li>
+                                    <li>📊 パフォーマンス分析</li>
+                                    <li>🌍 多言語サポート</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1rem;">
+                            <input type="text" placeholder="拡張機能を検索..." style="width: 100%; padding: 0.5rem; background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+                            
+                            <div style="margin-top: 1rem;">
+                                <div style="background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div>
+                                            <h4 style="color: #fff; margin-bottom: 0.3rem;">🎨 Prettier - Code Formatter</h4>
+                                            <p style="color: #969696; font-size: 0.85rem;">コードを自動的に整形</p>
+                                            <p style="color: #858585; font-size: 0.8rem; margin-top: 0.3rem;">⭐ 4.8 | ⬇️ 10M+</p>
+                                        </div>
+                                        <button class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">インストール</button>
+                                    </div>
+                                </div>
+
+                                <div style="background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div>
+                                            <h4 style="color: #fff; margin-bottom: 0.3rem;">🔍 IntelliSense Plus</h4>
+                                            <p style="color: #969696; font-size: 0.85rem;">高度なコード補完機能</p>
+                                            <p style="color: #858585; font-size: 0.8rem; margin-top: 0.3rem;">⭐ 4.9 | ⬇️ 5M+</p>
+                                        </div>
+                                        <span style="color: var(--success-color); font-size: 0.8rem;">✓ インストール済み</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- チュートリアルパネル -->
+                <div class="sidebar-panel" id="tutorial-panel" style="display: none;">
+                    <div class="sidebar-header">IDE学習ガイド</div>
+                    <div class="sidebar-content">
+                        <div class="tutorial-card">
+                            <div class="tutorial-header">
+                                <div class="tutorial-step">🎓</div>
+                                <div class="tutorial-title">IDE用語集</div>
+                            </div>
+                            <div class="tutorial-content">
+                                <p>統合開発環境（IDE）の重要な概念を学びましょう。</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1rem;">
+                            <details style="background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                <summary style="cursor: pointer; color: var(--accent-color); font-weight: bold;">📦 ビルド・コンパイル</summary>
+                                <div style="margin-top: 1rem; color: #ccc;">
+                                    <p><strong>ビルド：</strong> ソースコードから実行可能なプログラムを生成する全体のプロセス</p>
+                                    <p style="margin-top: 0.5rem;"><strong>コンパイル：</strong> 人間が読めるコードを機械語に変換する作業</p>
+                                    <div style="background: #000; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+                                        <code style="color: #4ec9b0;">source.java</code> → 
+                                        <code style="color: #dcdcaa;">javac</code> → 
+                                        <code style="color: #ce9178;">source.class</code>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <details style="background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                <summary style="cursor: pointer; color: var(--accent-color); font-weight: bold;">🚀 デプロイ</summary>
+                                <div style="margin-top: 1rem; color: #ccc;">
+                                    <p>開発したアプリケーションを本番環境に配置し、ユーザーが利用できる状態にすること</p>
+                                    <ol style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                                        <li>ビルド成果物の準備</li>
+                                        <li>サーバーへの転送</li>
+                                        <li>環境設定の適用</li>
+                                        <li>サービスの起動</li>
+                                    </ol>
+                                </div>
+                            </details>
+
+                            <details style="background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                <summary style="cursor: pointer; color: var(--accent-color); font-weight: bold;">♻️ リファクタリング</summary>
+                                <div style="margin-top: 1rem; color: #ccc;">
+                                    <p>コードの動作を変えずに、内部構造を改善すること</p>
+                                    <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                                        <li>変数名の改善</li>
+                                        <li>重複コードの削除</li>
+                                        <li>メソッドの抽出</li>
+                                        <li>クラスの分割</li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <details style="background: var(--ide-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1rem; margin-bottom: 0.5rem;">
+                                <summary style="cursor: pointer; color: var(--accent-color); font-weight: bold;">📊 プロファイル</summary>
+                                <div style="margin-top: 1rem; color: #ccc;">
+                                    <p>プログラムの実行時性能を分析し、ボトルネックを特定するツール</p>
+                                    <div style="background: #000; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; font-family: monospace; font-size: 0.8rem;">
+                                        <div>CPU使用率: ████████░░ 80%</div>
+                                        <div>メモリ使用: ██████░░░░ 60%</div>
+                                        <div>実行時間: processData() - 750ms</div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gitパネル -->
+                <div class="sidebar-panel" id="git-panel" style="display: none;">
+                    <div class="sidebar-header">ソース管理</div>
+                    <div class="sidebar-content">
+                        <div class="tutorial-card">
+                            <div class="tutorial-header">
+                                <div class="tutorial-step">5</div>
+                                <div class="tutorial-title">バージョン管理を理解しよう</div>
+                            </div>
+                            <div class="tutorial-content">
+                                <p>Gitを使用してコードの変更履歴を管理します。</p>
+                                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                    <li>変更の追跡</li>
+                                    <li>過去のバージョンへの復元</li>
+                                    <li>チーム開発での協力</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- エディターエリア -->
+            <div class="ide-editor">
+                <!-- ブレッドクラム -->
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">MyProject</span>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-item">src</span>
+                    <span class="breadcrumb-separator">›</span>
+                    <span class="breadcrumb-item">main.js</span>
+                </div>
+
+                <!-- エディタータブ -->
+                <div class="editor-tabs">
+                    <div class="editor-tab active">
+                        <span>main.js</span>
+                        <span class="close-btn">×</span>
+                    </div>
+                    <div class="editor-tab">
+                        <span>calculator.js</span>
+                        <span class="close-btn">×</span>
+                    </div>
+                    <div class="editor-tab">
+                        <span>styles.css</span>
+                        <span class="close-btn">×</span>
+                    </div>
+                </div>
+
+                <!-- デバッグコントロール（デバッグ時のみ表示） -->
+                <div class="debug-controls" id="debug-controls" style="display: none;">
+                    <button class="debug-button" onclick="debugContinue()">
+                        ▶️ 続行 (F5)
+                    </button>
+                    <button class="debug-button" onclick="debugStepOver()">
+                        ⏭️ ステップオーバー (F10)
+                    </button>
+                    <button class="debug-button" onclick="debugStepInto()">
+                        ⬇️ ステップイン (F11)
+                    </button>
+                    <button class="debug-button" onclick="debugStepOut()">
+                        ⬆️ ステップアウト (Shift+F11)
+                    </button>
+                    <button class="debug-button" onclick="debugStop()">
+                        ⏹️ 停止 (Shift+F5)
+                    </button>
+                </div>
+
+                <!-- エディターコンテンツ -->
+                <div class="editor-content">
+                    <div class="code-editor">
+                        <div class="line-numbers">
+                            <div>1</div>
+                            <div>2</div>
+                            <div>3</div>
+                            <div>4</div>
+                            <div>5</div>
+                            <div>6</div>
+                            <div>7</div>
+                            <div>8</div>
+                            <div>9</div>
+                            <div>10</div>
+                            <div>11</div>
+                            <div>12</div>
+                            <div>13</div>
+                            <div>14</div>
+                            <div>15</div>
+                        </div>
+                        <div class="code-content" id="code-content">
+                            <div class="code-line" onclick="toggleBreakpoint(this, 1)">
+                                <span style="color: #c586c0;">class</span> <span style="color: #4ec9b0;">Calculator</span> {
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 2)">
+                                <span style="color: #c586c0;">    constructor</span>() {
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 3)">
+                                        <span style="color: #9cdcfe;">this</span>.<span style="color: #9cdcfe;">result</span> = <span style="color: #b5cea8;">0</span>;
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 4)">
+                                    }
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 5)">
+                                
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 6)">
+                                    <span style="color: #dcdcaa;">add</span>(<span style="color: #9cdcfe;">a</span>, <span style="color: #9cdcfe;">b</span>) {
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 7)">
+                                        <span style="color: #c586c0;">return</span> <span style="color: #9cdcfe;">a</span> + <span style="color: #9cdcfe;">b</span>;
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 8)">
+                                    }
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 9)">
+                                
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 10)">
+                                    <span style="color: #dcdcaa;">calculateTotal</span>(<span style="color: #9cdcfe;">items</span>) {
+                            </div>
+                            <div class="code-line breakpoint" onclick="toggleBreakpoint(this, 11)">
+                                        <span style="color: #c586c0;">let</span> <span style="color: #9cdcfe;">total</span> = <span style="color: #b5cea8;">0</span>;
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 12)">
+                                        <span style="color: #c586c0;">for</span> (<span style="color: #c586c0;">let</span> <span style="color: #9cdcfe;">item</span> <span style="color: #c586c0;">of</span> <span style="color: #9cdcfe;">items</span>) {
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 13)">
+                                            <span style="color: #9cdcfe;">total</span> += <span style="color: #9cdcfe;">item</span>.<span style="color: #9cdcfe;">price</span>;
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 14)">
+                                        }
+                            </div>
+                            <div class="code-line" onclick="toggleBreakpoint(this, 15)">
+                                        <span style="color: #c586c0;">return</span> <span style="color: #9cdcfe;">total</span>;<span class="cursor"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- インテリセンス（自動補完） -->
+                    <div class="intellisense" id="intellisense">
+                        <div class="intellisense-item">
+                            <span class="intellisense-icon">f</span>
+                            <span>forEach</span>
+                        </div>
+                        <div class="intellisense-item">
+                            <span class="intellisense-icon">f</span>
+                            <span>filter</span>
+                        </div>
+                        <div class="intellisense-item">
+                            <span class="intellisense-icon">f</span>
+                            <span>find</span>
+                        </div>
+                        <div class="intellisense-item">
+                            <span class="intellisense-icon">f</span>
+                            <span>map</span>
+                        </div>
+                    </div>
+
+                    <!-- エラーリスト -->
+                    <div class="error-list" id="error-list">
+                        <h4 style="color: #ccc; font-size: 0.9rem; margin-bottom: 0.5rem;">問題</h4>
+                        <div class="error-item" onclick="jumpToError(13)">
+                            <div class="error-icon error">×</div>
+                            <div class="error-details">
+                                <div>プロパティ 'price' は型 'unknown' に存在しません。</div>
+                                <div class="error-file">main.js:13:28</div>
+                            </div>
+                        </div>
+                        <div class="error-item" onclick="jumpToError(7)">
+                            <div class="error-icon warning">!</div>
+                            <div class="error-details">
+                                <div>変数 'result' は宣言されていますが、使用されていません。</div>
+                                <div class="error-file">main.js:3:14</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- プロパティパネル -->
+                    <div class="properties-panel" id="properties-panel">
+                        <h4 style="color: #ccc; font-size: 0.9rem; margin-bottom: 0.5rem;">プロパティ</h4>
+                        <div class="property-group">
+                            <div class="property-group-header">
+                                <span>▼</span>
+                                <span>Calculatorクラス</span>
+                            </div>
+                            <div class="property-row">
+                                <span class="property-name">名前</span>
+                                <span class="property-value">Calculator</span>
+                            </div>
+                            <div class="property-row">
+                                <span class="property-name">型</span>
+                                <span class="property-value">class</span>
+                            </div>
+                            <div class="property-row">
+                                <span class="property-name">メソッド数</span>
+                                <span class="property-value">2</span>
+                            </div>
+                            <div class="property-row">
+                                <span class="property-name">行数</span>
+                                <span class="property-value">16</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ターミナル/出力 -->
+        <div class="ide-terminal">
+            <div class="terminal-tabs">
+                <div class="terminal-tab active" data-terminal="terminal">ターミナル</div>
+                <div class="terminal-tab" data-terminal="output">出力</div>
+                <div class="terminal-tab" data-terminal="problems">問題</div>
+                <div class="terminal-tab" data-terminal="debug-console">デバッグコンソール</div>
+            </div>
+            <div class="terminal-content" id="terminal-content">
+                <div>PS C:\Projects\MyProject> <span style="color: #fff;">npm run build</span></div>
+                <div style="margin-top: 0.5rem;">
+                    <div>> my-project@1.0.0 build</div>
+                    <div>> webpack --mode production</div>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <div style="color: #4caf50;">✓ Build completed successfully</div>
+                    <div>Bundle size: 125.3 KB</div>
+                    <div>Build time: 2.34s</div>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <div>PS C:\Projects\MyProject> <span class="cursor"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ステータスバー -->
+        <div class="ide-statusbar">
+            <div class="status-item">
+                <span>📁 MyProject</span>
+                <span>🌿 main</span>
+                <span>✓ 0 ⚠️ 1 × 1</span>
+            </div>
+            <div class="status-item">
+                <span>Ln 15, Col 36</span>
+                <span>UTF-8</span>
+                <span>JavaScript</span>
+                <span>🔔</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ツールチップ -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // プリローダー処理
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('preloader').style.display = 'none';
+                document.getElementById('ide-container').style.display = 'flex';
+                initializeIDE();
+            }, 1500);
+        });
+
+        // IDE初期化
+        function initializeIDE() {
+            // アクティビティバーのクリックイベント
+            document.querySelectorAll('.activity-icon').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    // アクティブ状態を更新
+                    document.querySelectorAll('.activity-icon').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // パネルの表示切替
+                    const panel = this.getAttribute('data-panel');
+                    document.querySelectorAll('.sidebar-panel').forEach(p => p.style.display = 'none');
+                    const targetPanel = document.getElementById(`${panel}-panel`);
+                    if (targetPanel) {
+                        targetPanel.style.display = 'block';
+                    }
+                });
+            });
+
+            // ターミナルタブの切替
+            document.querySelectorAll('.terminal-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.terminal-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    updateTerminalContent(this.getAttribute('data-terminal'));
+                });
+            });
+        }
+
+        // サンプルプロジェクト作成
+        function createSampleProject() {
+            const fileTree = document.getElementById('file-tree');
+            fileTree.innerHTML = `
+                <div style="color: #ccc; font-size: 0.85rem; font-family: monospace;">
+                    <div style="cursor: pointer; padding: 0.2rem;" onclick="toggleFolder(this)">
+                        <span>▼</span> 📁 MyProject
+                    </div>
+                    <div style="margin-left: 1rem;">
+                        <div style="cursor: pointer; padding: 0.2rem;" onclick="toggleFolder(this)">
+                            <span>▼</span> 📁 src
+                        </div>
+                        <div style="margin-left: 2rem;">
+                            <div style="cursor: pointer; padding: 0.2rem;" onclick="openFile('main.js')">📄 main.js</div>
+                            <div style="cursor: pointer; padding: 0.2rem;" onclick="openFile('calculator.js')">📄 calculator.js</div>
+                            <div style="cursor: pointer; padding: 0.2rem;" onclick="openFile('utils.js')">📄 utils.js</div>
+                        </div>
+                        <div style="cursor: pointer; padding: 0.2rem;" onclick="toggleFolder(this)">
+                            <span>▶</span> 📁 tests
+                        </div>
+                        <div style="cursor: pointer; padding: 0.2rem;" onclick="toggleFolder(this)">
+                            <span>▶</span> 📁 docs
+                        </div>
+                        <div style="cursor: pointer; padding: 0.2rem;" onclick="openFile('package.json')">📄 package.json</div>
+                        <div style="cursor: pointer; padding: 0.2rem;" onclick="openFile('README.md')">📄 README.md</div>
+                        <div style="cursor: pointer; padding: 0.2rem;" onclick="openFile('.gitignore')">📄 .gitignore</div>
+                    </div>
+                </div>
+            `;
+            
+            // アニメーション効果
+            fileTree.style.animation = 'slide-in 0.5s ease';
+        }
+
+        // フォルダの開閉
+        function toggleFolder(element) {
+            const icon = element.querySelector('span');
+            if (icon.textContent === '▼') {
+                icon.textContent = '▶';
+                // フォルダを閉じる処理
+            } else {
+                icon.textContent = '▼';
+                // フォルダを開く処理
+            }
+        }
+
+        // ファイルを開く
+        function openFile(filename) {
+            console.log(`Opening file: ${filename}`);
+            // ファイルを開く処理を実装
+        }
+
+        // デバッグセッション開始
+        let debugMode = false;
+        let currentDebugLine = 11;
+
+        function startDebugSession() {
+            debugMode = true;
+            document.getElementById('debug-controls').style.display = 'flex';
+            
+            // 現在行をハイライト
+            highlightDebugLine(currentDebugLine);
+            
+            // 変数の値を更新
+            updateWatchVariables();
+            
+            // ターミナルにデバッグ開始メッセージ
+            const terminal = document.getElementById('terminal-content');
+            terminal.innerHTML += `
+                <div style="color: #4ec9b0; margin-top: 1rem;">
+                    <div>デバッグセッションを開始しました...</div>
+                    <div>ブレークポイント: main.js:11</div>
+                </div>
+            `;
+        }
+
+        // デバッグ行のハイライト
+        function highlightDebugLine(lineNumber) {
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('current');
+            });
+            
+            if (lineNumber <= 15) {
+                document.querySelectorAll('.code-line')[lineNumber - 1].classList.add('current');
+            }
+        }
+
+        // ブレークポイントの切替
+        function toggleBreakpoint(element, lineNumber) {
+            element.classList.toggle('breakpoint');
+            
+            if (element.classList.contains('breakpoint')) {
+                showTooltip(`ブレークポイントを行 ${lineNumber} に設定しました`);
+            } else {
+                showTooltip(`ブレークポイントを行 ${lineNumber} から削除しました`);
+            }
+        }
+
+        // デバッグコントロール
+        function debugContinue() {
+            // 次のブレークポイントまで実行
+            showTooltip('実行を継続します...');
+        }
+
+        function debugStepOver() {
+            if (currentDebugLine < 15) {
+                currentDebugLine++;
+                highlightDebugLine(currentDebugLine);
+                updateWatchVariables();
+            }
+        }
+
+        function debugStepInto() {
+            showTooltip('関数の内部にステップインします...');
+        }
+
+        function debugStepOut() {
+            showTooltip('関数から抜け出します...');
+        }
+
+        function debugStop() {
+            debugMode = false;
+            document.getElementById('debug-controls').style.display = 'none';
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('current');
+            });
+            showTooltip('デバッグを停止しました');
+        }
+
+        // 変数ウォッチャー更新
+        function updateWatchVariables() {
+            const watchList = document.getElementById('watch-list');
+            
+            if (currentDebugLine === 11) {
+                watchList.innerHTML = `
+                    <div class="watch-item">
+                        <span class="watch-name">items</span>
+                        <span>
+                            <span class="watch-value">[{price: 100}, {price: 250}, ...]</span>
+                            <span class="watch-type"> array</span>
+                        </span>
+                    </div>
+                    <div class="watch-item">
+                        <span class="watch-name">total</span>
+                        <span>
+                            <span class="watch-value">0</span>
+                            <span class="watch-type"> number</span>
+                        </span>
+                    </div>
+                `;
+            } else if (currentDebugLine === 13) {
+                watchList.innerHTML = `
+                    <div class="watch-item">
+                        <span class="watch-name">items</span>
+                        <span>
+                            <span class="watch-value">[{price: 100}, {price: 250}, ...]</span>
+                            <span class="watch-type"> array</span>
+                        </span>
+                    </div>
+                    <div class="watch-item">
+                        <span class="watch-name">total</span>
+                        <span>
+                            <span class="watch-value">100</span>
+                            <span class="watch-type"> number</span>
+                        </span>
+                    </div>
+                    <div class="watch-item">
+                        <span class="watch-name">item</span>
+                        <span>
+                            <span class="watch-value">{price: 100}</span>
+                            <span class="watch-type"> object</span>
+                        </span>
+                    </div>
+                `;
+            }
+        }
+
+        // エラー位置へジャンプ
+        function jumpToError(lineNumber) {
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('error');
+            });
+            
+            if (lineNumber <= 15) {
+                const errorLine = document.querySelectorAll('.code-line')[lineNumber - 1];
+                errorLine.classList.add('error');
+                errorLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // 検索実行
+        function performSearch() {
+            showTooltip('プロジェクト全体を検索中...');
+            
+            setTimeout(() => {
+                const terminal = document.getElementById('terminal-content');
+                terminal.innerHTML = `
+                    <div style="color: #4ec9b0;">検索結果: "calculate"</div>
+                    <div style="margin-top: 0.5rem;">
+                        <div style="color: #969696;">src/main.js</div>
+                        <div style="margin-left: 1rem;">10: calculateTotal(items) {</div>
+                        <div style="color: #969696;">src/calculator.js</div>
+                        <div style="margin-left: 1rem;">5: function calculate(a, b, operation) {</div>
+                        <div style="margin-left: 1rem;">15: const result = calculate(x, y, 'add');</div>
+                    </div>
+                    <div style="margin-top: 0.5rem; color: #858585;">3件の結果が見つかりました</div>
+                `;
+            }, 500);
+        }
+
+        // ターミナルコンテンツ更新
+        function updateTerminalContent(type) {
+            const terminal = document.getElementById('terminal-content');
+            
+            switch(type) {
+                case 'output':
+                    terminal.innerHTML = `
+                        <div style="color: #4ec9b0;">[実行開始] Calculator Test</div>
+                        <div>テスト 1: add(5, 3) = 8 ✓</div>
+                        <div>テスト 2: calculateTotal([...]) = 1000 ✓</div>
+                        <div style="color: #4caf50; margin-top: 0.5rem;">すべてのテストが成功しました！</div>
+                    `;
+                    break;
+                case 'problems':
+                    terminal.innerHTML = `
+                        <div style="color: #f44336;">エラー (1):</div>
+                        <div>main.js:13:28 - プロパティ 'price' は型 'unknown' に存在しません。</div>
+                        <div style="color: #ff9800; margin-top: 0.5rem;">警告 (1):</div>
+                        <div>main.js:3:14 - 変数 'result' は宣言されていますが、使用されていません。</div>
+                    `;
+                    break;
+                case 'debug-console':
+                    terminal.innerHTML = `
+                        <div style="color: #4ec9b0;">デバッグコンソール</div>
+                        <div>> items.length</div>
+                        <div style="color: #b5cea8;">5</div>
+                        <div>> items[0].price</div>
+                        <div style="color: #b5cea8;">100</div>
+                        <div>> <span class="cursor"></span></div>
+                    `;
+                    break;
+                default:
+                    terminal.innerHTML = `
+                        <div>PS C:\\Projects\\MyProject> npm run build</div>
+                        <div style="margin-top: 0.5rem;">
+                            <div>> my-project@1.0.0 build</div>
+                            <div>> webpack --mode production</div>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <div style="color: #4caf50;">✓ Build completed successfully</div>
+                            <div>Bundle size: 125.3 KB</div>
+                            <div>Build time: 2.34s</div>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <div>PS C:\\Projects\\MyProject> <span class="cursor"></span></div>
+                        </div>
+                    `;
+            }
+        }
+
+        // ツールチップ表示
+        function showTooltip(message) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = message;
+            tooltip.style.display = 'block';
+            tooltip.style.left = '50%';
+            tooltip.style.top = '50%';
+            tooltip.style.transform = 'translate(-50%, -50%)';
+            
+            setTimeout(() => {
+                tooltip.style.display = 'none';
+            }, 2000);
+        }
+
+        // インテリセンス（簡易版）
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === ' ') {
+                const intellisense = document.getElementById('intellisense');
+                intellisense.style.display = 'block';
+                intellisense.style.left = '400px';
+                intellisense.style.top = '300px';
+                
+                setTimeout(() => {
+                    intellisense.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (debugMode) {
+                if (e.key === 'F5' && !e.shiftKey) {
+                    e.preventDefault();
+                    debugContinue();
+                } else if (e.key === 'F10') {
+                    e.preventDefault();
+                    debugStepOver();
+                } else if (e.key === 'F11' && !e.shiftKey) {
+                    e.preventDefault();
+                    debugStepInto();
+                } else if (e.key === 'F11' && e.shiftKey) {
+                    e.preventDefault();
+                    debugStepOut();
+                } else if (e.key === 'F5' && e.shiftKey) {
+                    e.preventDefault();
+                    debugStop();
+                }
+            }
+        });
+
+        // 初期表示
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初期パネルを表示
+            document.querySelector('[data-panel="explorer"]').click();
+        });
+    </script>
+</body>
+</html>
