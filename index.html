@@ -473,6 +473,137 @@
 
         window.addEventListener('DOMContentLoaded', adjustScale);
         window.addEventListener('resize', adjustScale);
+
+        // 隠しファイルアクセス機能
+        let docsKeysPressed = '';
+        let docsTimeout;
+        
+        document.addEventListener('keypress', function(e) {
+            // キー入力を蓄積
+            docsKeysPressed += e.key.toLowerCase();
+            
+            // タイムアウトをリセット
+            clearTimeout(docsTimeout);
+            docsTimeout = setTimeout(() => {
+                docsKeysPressed = '';
+            }, 2000);
+            
+            // "docs"が入力されたかチェック
+            if (docsKeysPressed.includes('docs')) {
+                docsKeysPressed = '';
+                showDocsPanel();
+            }
+        });
+
+        function showDocsPanel() {
+            // 既存のパネルがあれば削除
+            const existingPanel = document.getElementById('docs-panel');
+            if (existingPanel) {
+                existingPanel.remove();
+                return;
+            }
+
+            // ドキュメントパネルを作成
+            const panel = document.createElement('div');
+            panel.id = 'docs-panel';
+            panel.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+                color: white;
+                padding: 2rem;
+                border-radius: 15px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                z-index: 1000;
+                max-width: 500px;
+                text-align: center;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.2);
+            `;
+
+            panel.innerHTML = `
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">📋 プロジェクトドキュメント</h3>
+                <p style="margin-bottom: 1.5rem; opacity: 0.9;">システムの設計資料にアクセスできます</p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href=".requirements.html" style="
+                        background: rgba(255,255,255,0.2); 
+                        color: white; 
+                        text-decoration: none; 
+                        padding: 0.8rem 1.5rem; 
+                        border-radius: 8px; 
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        display: inline-block;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        📋 要件定義書
+                    </a>
+                    <a href=".design.html" style="
+                        background: rgba(255,255,255,0.2); 
+                        color: white; 
+                        text-decoration: none; 
+                        padding: 0.8rem 1.5rem; 
+                        border-radius: 8px; 
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                        border: 1px solid rgba(255,255,255,0.3);
+                        display: inline-block;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        ⚙️ 設計仕様書
+                    </a>
+                </div>
+                <p style="margin-top: 1.5rem; font-size: 0.9rem; opacity: 0.8;">
+                    クリックで閉じる | ESCキーでも閉じられます
+                </p>
+            `;
+
+            // パネルをクリックで閉じる
+            panel.addEventListener('click', function() {
+                panel.remove();
+            });
+
+            // ESCキーで閉じる
+            document.addEventListener('keydown', function escClose(e) {
+                if (e.key === 'Escape') {
+                    panel.remove();
+                    document.removeEventListener('keydown', escClose);
+                }
+            });
+
+            // オーバーレイを作成
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                backdrop-filter: blur(5px);
+            `;
+            
+            overlay.addEventListener('click', function() {
+                overlay.remove();
+                panel.remove();
+            });
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(panel);
+
+            // アニメーション効果
+            panel.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            panel.style.opacity = '0';
+            setTimeout(() => {
+                panel.style.transition = 'all 0.3s ease';
+                panel.style.transform = 'translate(-50%, -50%) scale(1)';
+                panel.style.opacity = '1';
+            }, 10);
+        }
     </script>
 </body>
 </html>
